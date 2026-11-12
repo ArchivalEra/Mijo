@@ -2,7 +2,12 @@
   "name": "mijo",
   "private": true,
   "type": "module",
-  "description": "Local workspace for ArchivalEra/Mijo (GitCode)",
+  "description": "A git catalogue for every human and machine",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArchivalEra/Mijo.git"
+  },
   "dependencies": {
     "@xindiwo/git-sdk": "2.0.0"
   },
