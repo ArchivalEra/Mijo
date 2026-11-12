@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-12T12:28:51.102Z",
+ "generatedAt": "2026-11-12T12:38:32.725Z",
  "note": null,
  "entries": [
   {
@@ -10,6 +10,14 @@
    "license": "GPL-2.0",
    "description": "a git catalogue for every human and machine",
    "url": "https://gitcode.com/ArchivalEra/Mijo"
+  },
+  {
+   "name": "git-sdk",
+   "maintainer": "xindiwo",
+   "lastCommit": "2026-09-19T03:07:16.000Z",
+   "license": "MIT",
+   "description": "git-sdk",
+   "url": "https://cnb.cool/xindiwo/git-sdk"
   },
   {
    "name": "arkui_ace_engine",
@@ -26,6 +34,22 @@
    "license": "NOASSERTION",
    "description": "Node.js JavaScript runtime ✨🐢🚀✨",
    "url": "https://github.com/nodejs/node"
+  },
+  {
+   "name": "gitlab-runner",
+   "maintainer": "GitLab.org",
+   "lastCommit": "2026-11-12T12:04:12.499Z",
+   "license": null,
+   "description": "GitLab Runner is the open source project that is used to run your CI/CD jobs and send the results back to GitLab",
+   "url": "https://gitlab.com/gitlab-org/gitlab-runner"
+  },
+  {
+   "name": "Atlassian Event",
+   "maintainer": "atlassian",
+   "lastCommit": "2026-11-12T11:53:55.894Z",
+   "license": null,
+   "description": null,
+   "url": "https://bitbucket.org/atlassian/atlassian-event"
   }
  ]
 }
