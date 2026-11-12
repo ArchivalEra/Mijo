@@ -1,6 +1,14 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-12T11:52:10.434Z",
- "note": "1 URL(s) unavailable (private / not found / no read token) — skipped, no empty shell entries.",
- "entries": []
+ "generatedAt": "2026-11-12T11:55:08.065Z",
+ "note": null,
+ "entries": [
+  {
+   "name": "Mijo",
+   "maintainer": "ArchivalEra",
+   "lastCommit": "2026-11-12T19:43:45+08:00",
+   "license": "GPL-2.0",
+   "url": "https://gitcode.com/ArchivalEra/Mijo"
+  }
+ ]
 }
