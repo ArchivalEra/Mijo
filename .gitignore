@@ -1,0 +1,138 @@
+# ============================================================
+# 白名单模式：默认忽略一切，仅放行下面显式列出的文件/目录
+# 需要纳管新文件时，在“放行”区追加一行 !/路径
+# ============================================================
+
+# ---------- 1. 先忽略仓库根目录下的一切 ----------
+/*
+
+# ---------- 2. 放行仓库基础设施文件 ----------
+!/.gitignore
+!/.gitattributes
+!/.editorconfig
+!/.gitmodules
+!/.mailmap
+!/LICENSE
+!/LICENSE.*
+!/COPYING
+!/COPYING.*
+!/NOTICE
+!/README
+!/README.*
+!/CHANGELOG
+!/CHANGELOG.*
+!/CONTRIBUTING
+!/CONTRIBUTING.*
+!/CODE_OF_CONDUCT
+!/CODE_OF_CONDUCT.*
+!/SECURITY
+!/SECURITY.*
+
+# ---------- 3. 放行 CI / 平台配置目录 ----------
+!/.github/
+!/.gitlab/
+!/.gitee/
+!/.atomgit/
+!/.circleci/
+!/.husky/
+
+# ---------- 4. 放行源码、文档、测试等业务目录 ----------
+!/src/
+!/lib/
+!/pkg/
+!/cmd/
+!/internal/
+!/include/
+!/app/
+!/api/
+!/web/
+!/frontend/
+!/backend/
+!/scripts/
+!/tools/
+!/test/
+!/tests/
+!/spec/
+!/docs/
+!/doc/
+!/examples/
+!/assets/
+!/config/
+!/deploy/
+
+# ---------- 5. 放行目录后，再排除其中的构建产物与临时文件 ----------
+# 依赖与缓存
+**/node_modules/
+**/bower_components/
+**/vendor/
+**/.venv/
+**/venv/
+**/__pycache__/
+**/*.egg-info/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.tox/
+**/.cache/
+
+# 构建输出
+**/target/
+**/build/
+**/dist/
+**/out/
+**/bin/
+**/obj/
+**/.next/
+**/.nuxt/
+**/.output/
+**/coverage/
+**/release/
+**/Debug/
+**/Release/
+
+# 编译产物
+**/*.o
+**/*.obj
+**/*.a
+**/*.lib
+**/*.so
+**/*.so.*
+**/*.dylib
+**/*.dll
+**/*.class
+**/*.jar
+**/*.py[cod]
+**/*.exe
+**/*.out
+
+# IDE / 编辑器
+**/.idea/
+**/.vscode/
+**/.fleet/
+**/*.swp
+**/*.swo
+**/*~
+**/*.tmp
+**/*.bak
+
+# 系统文件
+**/.DS_Store
+**/Thumbs.db
+**/desktop.ini
+
+# 日志与本地环境
+**/*.log
+**/.env
+**/.env.*
+**/.local/
+**/.secrets/
+
+# 证书与密钥
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.crt
+**/*.cer
+**/id_rsa*
+**/id_ed25519*
