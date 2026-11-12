@@ -2,41 +2,279 @@
 <html lang="zh-CN">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>仓库目录</title>
+<title>Mijo — 仓库目录</title>
 <style>
-  body { font: 15px/1.6 system-ui, sans-serif; max-width: 980px; margin: 3rem auto; padding: 0 1rem; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { text-align: left; padding: .5rem .75rem; border-bottom: 1px solid #ddd; vertical-align: top; }
-  th { background: #f6f6f6; }
-  td.desc { color: #555; max-width: 26rem; }
-  td.num { color: #666; white-space: nowrap; }
-  .note { color: #666; font-size: .9rem; }
+  :root {
+    --ink: #111;
+    --dim: #666;
+    --line: #e6e6e6;
+    --bg: #fff;
+    --fallback: #d8d8d8;
+    --shadow: rgba(0,0,0,.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #e9e9e9;
+      --dim: #989898;
+      --line: #2b2b2b;
+      --bg: #151515;
+      --fallback: #f2f2f2;
+      --shadow: rgba(0,0,0,.5);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--ink); }
+  body {
+    font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+    max-width: 1000px; margin: 0 auto; padding: 3rem 1.25rem 5rem;
+  }
+  h1 { font-size: 1.4rem; font-weight: 600; margin: 0 0 .2rem; }
+  .tagline { color: var(--dim); font-size: .875rem; margin: 0 0 1.75rem; }
+
+  /* ── 薯片堆（通用组件）──────────────────────────────────────── */
+  .stack {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 44px;
+    cursor: default;
+  }
+  .stack .chip {
+    width: 34px; height: 34px;
+    flex: 0 0 auto;
+    display: grid; place-items: center;
+    overflow: hidden;
+    margin-left: -12px;                 /* 叠成一摞 */
+    border-radius: 50%;
+    background: var(--fallback);
+    border: 2px solid var(--bg);
+    box-shadow: 0 1px 3px var(--shadow);
+    font-size: .8rem; font-weight: 600; color: var(--dim);
+    transition: transform .2s cubic-bezier(.2,.8,.25,1),
+                margin-left .2s cubic-bezier(.2,.8,.25,1),
+                box-shadow .2s ease;
+  }
+  .stack .chip:first-child { margin-left: 0; }
+  .stack .chip img, .pop .item img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+
+  /* 悬停整摞 → 摊开成一排 */
+  .stack:hover .chip { margin-left: 3px; }
+
+  /* 单个头像悬停 → 放大 + 挤开右侧邻居 */
+  .stack .chip:hover {
+    transform: scale(1.4);
+    box-shadow: 0 5px 16px var(--shadow);
+    position: relative;
+    z-index: 6;
+  }
+  .stack .chip:hover ~ .chip { transform: translateX(9px); }
+
+  /* ── 展开的大框框 ──────────────────────────────────────────── */
+  .pop {
+    position: absolute;
+    top: 100%; left: 0;
+    margin-top: 10px;
+    padding: .55rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 48px);
+    gap: .4rem;
+    max-width: min(420px, 80vw);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px var(--shadow);
+    opacity: 0; visibility: hidden;
+    transform: translateY(-8px) scale(.96);
+    transform-origin: top left;
+    transition: opacity .17s ease, transform .2s cubic-bezier(.2,.8,.25,1), visibility .17s;
+    z-index: 40;
+  }
+  .stack:hover .pop,
+  .stack:focus-within .pop,
+  .pop:hover {
+    opacity: 1; visibility: visible;
+    transform: translateY(0) scale(1);
+  }
+  .pop .item {
+    width: 48px; height: 48px;
+    display: grid; place-items: center;
+    overflow: hidden;
+    border-radius: 11px;
+    background: var(--fallback);
+    font-size: .95rem; font-weight: 600; color: var(--dim);
+    transition: transform .17s cubic-bezier(.2,.8,.25,1), box-shadow .17s;
+  }
+  /* 框里单头像悬停 → 放大挤开 */
+  .pop .item:hover {
+    transform: scale(1.3);
+    box-shadow: 0 7px 20px var(--shadow);
+    position: relative; z-index: 3;
+  }
+  .pop .item:hover ~ .item { transform: translateX(7px); }
+
+  /* ── 顶部维护者墙 ─────────────────────────────────────────── */
+  .wall {
+    position: relative; z-index: 50;
+    display: flex; align-items: center; gap: .75rem;
+    padding: .9rem 1rem;
+    margin-bottom: 1.75rem;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+  .wall .label { color: var(--dim); font-size: .8rem; }
+
+  /* ── 表格 ─────────────────────────────────────────────────── */
+  table { border-collapse: collapse; width: 100%; position: relative; z-index: 1; }
+  thead { position: relative; z-index: 1; }
+  tbody tr { position: relative; }
+  tbody tr:has(.stack:hover) { z-index: 30; }
+  th, td {
+    text-align: left; padding: .6rem .65rem;
+    border-bottom: 1px solid var(--line); vertical-align: middle;
+  }
+  th {
+    font-weight: 600; font-size: .72rem; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--dim);
+  }
+  td.desc { color: var(--dim); font-size: .875rem; max-width: 22rem; }
+  td.num { color: var(--dim); font-size: .85rem; white-space: nowrap;
+           font-variant-numeric: tabular-nums; }
+  td.lic { color: var(--dim); font-size: .8rem; white-space: nowrap; }
+  a { color: inherit; text-decoration: none; }
+  a.repo { font-weight: 500; }
+  a.repo:hover { text-decoration: underline; }
+  .empty { color: var(--dim); padding: 1.5rem 0; }
+  footer { margin-top: 2.5rem; color: var(--dim); font-size: .78rem; }
+  footer .legal a { text-decoration: underline; text-underline-offset: 2px; }
+  footer .copyright { margin-top: .35rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chip, .pop, .item { transition: none !important; }
+    .stack .chip:hover, .pop .item:hover, .stack .chip:hover ~ .chip,
+    .pop .item:hover ~ .item { transform: none !important; }
+  }
 </style>
-<h1>仓库目录</h1>
-<p class="note" id="note"></p>
+
+<h1>Mijo</h1>
+<p class="tagline">a git catalogue for every human and machine</p>
+
+<div class="wall" id="wall">
+  <span class="label">维护者</span>
+  <span class="stack" id="wall-stack"></span>
+</div>
+
 <table>
   <thead>
-    <tr><th>名称</th><th>维护者</th><th>描述</th><th>最后 commit</th><th>License</th></tr>
+    <tr>
+      <th>仓库</th><th>维护者</th><th>描述</th><th>最后提交</th><th>License</th>
+    </tr>
   </thead>
   <tbody id="rows"></tbody>
 </table>
+
+<footer>
+  <span id="stamp"></span>
+  <span class="legal">
+    · <a href="https://github.com/ArchivalEra/Mijo" target="_blank" rel="noopener">source</a>
+    · <a href="https://github.com/ArchivalEra/Mijo/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+  </span>
+  <div class="copyright">© 2026 ArchivalEra</div>
+</footer>
+
 <script>
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-fetch('catalogue.json').then(r => r.json()).then(d => {
-  document.getElementById('note').textContent = d.note || '';
-  const rows = document.getElementById('rows');
-  if (!d.entries.length) {
-    rows.innerHTML = '<tr><td colspan="5" class="note">暂无条目 —— 往 material/urls.txt 里粘一个 URL。</td></tr>';
-    return;
+// 头像永远指向各平台自己的 CDN —— 本仓不 serve 任何一张图。
+// 没有头像时渲染首字母，不请求任何占位图服务。
+// 头像图片失败（防盗链 / CDN 拒绝）时退回首字母：
+// 用 <img> 而不是 background-image，这样 onerror 可观测。
+function face(el, url, name) {
+  const initial = (name || '?').trim().charAt(0).toUpperCase();
+  if (url) {
+    const img = new Image();
+    img.alt = '';
+    img.referrerPolicy = 'no-referrer';       // 部分 CDN 只查 Referer，去掉即可
+    img.onerror = () => { el.textContent = initial; el.classList.add('initial'); };
+    img.src = url;
+    el.appendChild(img);
+  } else {
+    el.textContent = initial;
+    el.classList.add('initial');
   }
-  rows.innerHTML = d.entries.map(e => `<tr>
-      <td><a href="${esc(e.url)}">${esc(e.name)}</a></td>
-      <td>${esc(e.maintainer ?? '—')}</td>
-      <td class="desc">${esc(e.description ?? '—')}</td>
-      <td class="num">${e.lastCommit ? esc(e.lastCommit.slice(0, 10)) : '—'}</td>
-      <td>${esc(e.license ?? '—')}</td>
-    </tr>`).join('');
+  return el;
+}
+
+function makeStack(items, cls) {
+  const stack = document.createElement('span');
+  stack.className = 'stack';
+  const pop = document.createElement('span');
+  pop.className = 'pop';
+
+  for (const it of items) {
+    const href = it.profile || it.url;
+    const chip = document.createElement('a');
+    chip.className = 'chip';
+    chip.href = href;
+    chip.setAttribute('aria-label', `${it.maintainer} · ${it.name}`);
+    chip.target = '_blank';
+    chip.rel = 'noopener';
+    face(chip, it.avatar, it.maintainer);
+
+    const item = document.createElement('a');
+    item.className = 'item';
+    item.href = href;
+    item.setAttribute('aria-label', `${it.maintainer} · ${it.name}`);
+    item.target = '_blank';
+    item.rel = 'noopener';
+    face(item, it.avatar, it.maintainer);
+
+    stack.appendChild(chip);
+    pop.appendChild(item);
+  }
+  stack.appendChild(pop);
+  return stack;
+}
+
+fetch('catalogue.json').then(r => r.json()).then(d => {
+  const entries = d.entries ?? [];
+  const rows = document.getElementById('rows');
+
+  if (!entries.length) {
+    rows.innerHTML = '<tr><td colspan="5" class="empty">暂无条目 —— 往 material/urls.txt 里粘一个 URL。</td></tr>';
+  } else {
+    // 顶部墙：全部头像叠成一摞，悬停展开全部
+    const wall = document.getElementById('wall-stack');
+    wall.replaceWith(makeStack(entries, 'wall'));
+
+    rows.innerHTML = '';
+    for (const e of entries) {
+      const tr = document.createElement('tr');
+      const date = e.lastCommit ? new Date(e.lastCommit).toISOString().slice(0, 10) : '—';
+
+      // 同一维护者的仓库叠成一摞（通常 1 个，多个时才有「一叠薯片」的形）
+      const same = entries.filter(x => (x.maintainer || x.url) === (e.maintainer || e.url));
+
+      tr.innerHTML =
+        `<td><a class="repo" href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.name)}</a></td>` +
+        `<td></td>` +
+        `<td class="desc">${esc(e.description ?? '—')}</td>` +
+        `<td class="num">${esc(date)}</td>` +
+        `<td class="lic">${esc(e.license ?? '—')}</td>`;
+
+      tr.children[1].appendChild(makeStack(same, 'row'));
+      rows.appendChild(tr);
+    }
+  }
+
+  if (d.generatedAt) {
+    document.getElementById('stamp').textContent =
+      'derived ' + new Date(d.generatedAt).toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+  }
+}).catch(err => {
+  document.getElementById('rows').innerHTML =
+    `<tr><td colspan="5" class="empty">读取 catalogue.json 失败：${esc(err.message)}</td></tr>`;
 });
 </script>

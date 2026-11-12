@@ -24,3 +24,6 @@ https://gitlab.com/gitlab-org/gitlab-runner
 
 # —— Bitbucket（公开仓匿名可读）——
 https://bitbucket.org/atlassian/aui
+
+# —— 抗压测试（大仓 / 空描述 / 高 fork）——
+https://github.com/any-pr/any-pr

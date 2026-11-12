@@ -60,7 +60,9 @@ async function agJson(args) {
 
 async function viaAgCli(ref) {
   const target = `${ref.owner}/${ref.repo}`;
-  const repo = await agJson(['repo', 'view', target, '--json', '--raw-output']);
+  // 用 api 拿完整 raw：repo view 的 --json 会丢掉 owner.avatar_url
+  const repo = await agJson(['api', `/repos/${target}`, '--raw-output']);
+  const owner = repo.owner ?? {};
   let lastCommit = null;
   try {
     const commits = await agJson(['commit', 'list', target, '--limit', '1', '--json', '--raw-output']);
@@ -70,10 +72,12 @@ async function viaAgCli(ref) {
   }
   return {
     name: repo.name,
-    maintainer: repo.owner ?? ref.owner,
+    maintainer: owner.name || owner.username || ref.owner,
     lastCommit,
-    license: repo.license ?? null,
+    license: typeof repo.license === 'object' ? (repo.license?.name ?? null) : (repo.license ?? null),
     description: repo.description || null,
+    avatar: owner.avatar_url || null,
+    profile: owner.html_url || null,
     url: ref.url,
   };
 }
@@ -110,12 +114,20 @@ async function main() {
         entries.push(await viaAgCli(ref));
       } else {
         const r = await sdk.platform(ref.platform).repositories.get({ owner: ref.owner, repo: ref.repo });
+        const ow = r.owner ?? {};
+        let avatar = ow.avatarUrl ?? null;
+        // GitLab 返回的是相对路径（/uploads/...），补 host
+        if (avatar && avatar.startsWith('/')) {
+          avatar = (ref.platform === 'gitlab' ? 'https://gitlab.com' : '') + avatar;
+        }
         entries.push({
           name: r.name,
-          maintainer: r.owner?.username ?? r.owner?.login ?? ref.owner,
+          maintainer: ow.username ?? ow.login ?? ref.owner,
           lastCommit: r.pushedAt ?? r.updatedAt ?? null,
           license: r.license ?? null,
           description: r.description || null,
+          avatar,
+          profile: ow.htmlUrl ?? null,
           url: ref.url,
         });
       }
@@ -127,12 +139,11 @@ async function main() {
     }
   }
 
+  // 取不到的条目静默忽略：原因只打在 CI 日志里，不进 catalogue。
+  // 对外页面不展示任何错误状态 —— 目录只呈现可用条目。
   const catalogue = {
     schema: 1,
     generatedAt: new Date().toISOString(),
-    note: skipped.length
-      ? `${skipped.length} URL(s) unavailable (private / not found / no read token) — skipped, no empty shell entries.`
-      : null,
     entries,
   };
   await mkdir(new URL('../site/', import.meta.url), { recursive: true });
