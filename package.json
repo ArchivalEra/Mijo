@@ -1,0 +1,12 @@
+{
+  "name": "mijo",
+  "private": true,
+  "type": "module",
+  "description": "Local workspace for ArchivalEra/Mijo (GitCode)",
+  "dependencies": {
+    "@xindiwo/git-sdk": "2.0.0"
+  },
+  "devDependencies": {
+    "@hust-open-atom-club/atomgit-cli": "0.7.4"
+  }
+}

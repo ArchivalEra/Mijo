@@ -1,0 +1,14 @@
+{
+ "schema": 1,
+ "generatedAt": "2026-11-12T11:32:47.350Z",
+ "note": null,
+ "entries": [
+  {
+   "name": "Mijo",
+   "maintainer": "ArchivalEra",
+   "lastCommit": "2026-11-12T17:54:52+08:00",
+   "license": "GPL-2.0",
+   "url": "https://gitcode.com/ArchivalEra/Mijo"
+  }
+ ]
+}

@@ -136,3 +136,8 @@
 **/*.cer
 **/id_rsa*
 **/id_ed25519*
+# ---------- 6. Mijo 站点与数据（本仓自有，需纳管）----------
+!/package.json
+!/package-lock.json
+!/site/
+!/material/

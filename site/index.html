@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<title>仓库目录</title>
+<style>
+  body { font: 15px/1.6 system-ui, sans-serif; max-width: 900px; margin: 3rem auto; padding: 0 1rem; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: .5rem .75rem; border-bottom: 1px solid #ddd; }
+  th { background: #f6f6f6; }
+  .note { color: #666; font-size: .9rem; }
+</style>
+<h1>仓库目录</h1>
+<p class="note" id="note"></p>
+<table>
+  <thead><tr><th>名称</th><th>维护者</th><th>最后 commit</th><th>License</th></tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+<script>
+fetch('catalogue.json').then(r => r.json()).then(d => {
+  document.getElementById('note').textContent = d.note || '';
+  document.getElementById('rows').innerHTML = d.entries.map(e =>
+    `<tr><td><a href="${e.url}">${e.name}</a></td><td>${e.maintainer ?? '—'}</td>` +
+    `<td>${e.lastCommit ? e.lastCommit.slice(0, 10) : '—'}</td><td>${e.license ?? '—'}</td></tr>`
+  ).join('');
+});
+</script>
