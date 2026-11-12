@@ -13,6 +13,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { createGitSdk } from '@xindiwo/git-sdk';
+import { enrich } from './enrich.mjs';
 
 const run = promisify(execFile);
 const OUT = new URL('../site/catalogue.json', import.meta.url).pathname;
@@ -118,6 +119,7 @@ async function main() {
           url: ref.url,
         });
       }
+      entries[entries.length - 1] = await enrich(entries[entries.length - 1], ref, { tokens });
     } catch (e) {
       // 读不到 ≠ 坏了：私有 / 无权限 / 已删除都记原因后跳过，不产空壳条目。
       const msg = (e.stderr || e.message || '').trim().split('\n').pop();

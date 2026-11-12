@@ -23,4 +23,4 @@ https://github.com/nodejs/node
 https://gitlab.com/gitlab-org/gitlab-runner
 
 # —— Bitbucket（公开仓匿名可读）——
-https://bitbucket.org/atlassian/atlassian-event
+https://bitbucket.org/atlassian/aui
