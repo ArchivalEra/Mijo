@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-12T12:38:32.725Z",
+ "generatedAt": "2026-11-12T12:44:05.405Z",
  "note": null,
  "entries": [
   {
@@ -22,7 +22,7 @@
   {
    "name": "arkui_ace_engine",
    "maintainer": "openharmony_admin",
-   "lastCommit": "2025-09-13T13:21:35.000Z",
+   "lastCommit": "2025-09-13T13:21:34+00:00",
    "license": "Apache-2.0",
    "description": "The OpenHarmony JS UI framework provides basic, container, and canvas UI components and standard CSS animation capabilities. It supports the web-development-like programming paradigm.",
    "url": "https://gitee.com/openharmony/arkui_ace_engine"
@@ -30,7 +30,7 @@
   {
    "name": "node",
    "maintainer": "nodejs",
-   "lastCommit": "2026-11-12T10:26:03.000Z",
+   "lastCommit": "2026-11-12T10:25:07Z",
    "license": "NOASSERTION",
    "description": "Node.js JavaScript runtime ✨🐢🚀✨",
    "url": "https://github.com/nodejs/node"
@@ -38,18 +38,18 @@
   {
    "name": "gitlab-runner",
    "maintainer": "GitLab.org",
-   "lastCommit": "2026-11-12T12:04:12.499Z",
-   "license": null,
+   "lastCommit": "2026-11-12T16:19:33.000+05:30",
+   "license": "MIT",
    "description": "GitLab Runner is the open source project that is used to run your CI/CD jobs and send the results back to GitLab",
    "url": "https://gitlab.com/gitlab-org/gitlab-runner"
   },
   {
-   "name": "Atlassian Event",
+   "name": "aui",
    "maintainer": "atlassian",
-   "lastCommit": "2026-11-12T11:53:55.894Z",
-   "license": null,
-   "description": null,
-   "url": "https://bitbucket.org/atlassian/atlassian-event"
+   "lastCommit": "2026-11-12T11:47:00+00:00",
+   "license": "Apache-2.0",
+   "description": "AUI - Atlassian User Interface library.",
+   "url": "https://bitbucket.org/atlassian/aui"
   }
  ]
 }
