@@ -1,16 +1,26 @@
 # 一行一个仓库 URL；# 开头是注释。有人发 issue / 微信贴网址，看着行就粘进来。
 #
-# CI 用只读 token 拉取每个仓库的名称、维护者、描述、最后 commit 时间、license，
-# 派生 site/catalogue.json。拉不到的（私有 / 已删除 / token 无权）自动跳过并记录原因，
-# 不产出空壳条目。
+# CI 拉取每个仓库的名称、维护者、描述、最后 commit 时间、license，派生
+# site/catalogue.json。拉不到的（私有 / 已删除 / 无 token 权限）自动跳过并记录
+# 原因，不产出空壳条目。
 #
-# Gitee / GitHub 的公开仓匿名可读，不配 token 也能出数据。
+# 匿名可读：GitHub / Gitee / GitLab / Bitbucket 的公开仓
+# 需要 token：GitCode / AtomGit（MJ_GITCODE_TOKEN）、CNB（MJ_CNB_TOKEN）
 
 # —— AtomGit / GitCode（需只读 token）——
 https://gitcode.com/ArchivalEra/Mijo
+
+# —— CNB（需只读 token）——
+https://cnb.cool/xindiwo/git-sdk
 
 # —— Gitee（公开仓匿名可读）——
 https://gitee.com/openharmony/arkui_ace_engine
 
 # —— GitHub（公开仓匿名可读）——
 https://github.com/nodejs/node
+
+# —— GitLab（公开仓匿名可读）——
+https://gitlab.com/gitlab-org/gitlab-runner
+
+# —— Bitbucket（公开仓匿名可读）——
+https://bitbucket.org/atlassian/atlassian-event
