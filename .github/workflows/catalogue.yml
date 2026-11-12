@@ -1,0 +1,60 @@
+name: Build catalogue
+
+# 只读通路：本工作流只做 GET，写权限仅用于把生成的 catalogue.json 提交回仓库。
+# token 由仓库 secrets 提供（只读 PAT），命名为 MJ_*——与任何本地登录态隔离。
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'material/urls.txt'
+      - 'scripts/generate-catalogue.mjs'
+      - '.github/workflows/catalogue.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '23 5 * * 1'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        # --ignore-scripts：不执行任何依赖的安装脚本
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Install ag-cli
+        # AtomGit/GitCode 官方 CLI；npm 全局装在 runner 上，不落 token
+        run: npm install -g @hust-open-atom-club/atomgit-cli@0.7.4 --ignore-scripts --no-audit --no-fund
+
+      - name: Derive catalogue
+        # token 只进本步骤进程环境；缺哪个平台就跳过哪个平台的 URL，
+        # 生成器把原因写进 catalogue 的 note，不产空壳条目。
+        env:
+          AGCLI_TOKEN: ${{ secrets.MJ_GITCODE_TOKEN }}
+          MJ_GITCODE_TOKEN: ${{ secrets.MJ_GITCODE_TOKEN }}
+          MJ_GITHUB_TOKEN: ${{ secrets.MJ_GITHUB_TOKEN }}
+          MJ_GITEE_TOKEN: ${{ secrets.MJ_GITEE_TOKEN }}
+          MJ_CNB_TOKEN: ${{ secrets.MJ_CNB_TOKEN }}
+          MJ_GITLAB_TOKEN: ${{ secrets.MJ_GITLAB_TOKEN }}
+          MJ_BITBUCKET_TOKEN: ${{ secrets.MJ_BITBUCKET_TOKEN }}
+        run: node scripts/generate-catalogue.mjs
+
+      - name: Commit generated catalogue
+        run: |
+          if git diff --quiet -- site/catalogue.json; then
+            echo "catalogue unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add site/catalogue.json
+          git commit -m "chore(catalogue): auto-derived from material/urls.txt"
+          git push
