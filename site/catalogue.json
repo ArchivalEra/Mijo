@@ -1,7 +1,6 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-12T12:44:05.405Z",
- "note": null,
+ "generatedAt": "2026-11-12T14:11:22.407Z",
  "entries": [
   {
    "name": "Mijo",
@@ -9,6 +8,8 @@
    "lastCommit": "2026-11-12T19:43:45+08:00",
    "license": "GPL-2.0",
    "description": "a git catalogue for every human and machine",
+   "avatar": "https://cdn-img.gitcode.com/ec/ce/eccec81246f729c8fcd60019583961483658216cf5f1c93054ec0d943f036ddf.jpg",
+   "profile": "https://atomgit.com/ArchivalEra",
    "url": "https://gitcode.com/ArchivalEra/Mijo"
   },
   {
@@ -17,6 +18,8 @@
    "lastCommit": "2026-09-19T03:07:16.000Z",
    "license": "MIT",
    "description": "git-sdk",
+   "avatar": null,
+   "profile": "https://cnb.cool/xindiwo",
    "url": "https://cnb.cool/xindiwo/git-sdk"
   },
   {
@@ -25,14 +28,18 @@
    "lastCommit": "2025-09-13T13:21:34+00:00",
    "license": "Apache-2.0",
    "description": "The OpenHarmony JS UI framework provides basic, container, and canvas UI components and standard CSS animation capabilities. It supports the web-development-like programming paradigm.",
+   "avatar": "https://foruda.gitee.com/avatar/1677102952566165682/7928036_openharmony_admin_1622551091.png",
+   "profile": "https://gitee.com/openharmony_admin",
    "url": "https://gitee.com/openharmony/arkui_ace_engine"
   },
   {
    "name": "node",
    "maintainer": "nodejs",
-   "lastCommit": "2026-11-12T10:25:07Z",
+   "lastCommit": "2026-11-12T13:31:58Z",
    "license": "NOASSERTION",
    "description": "Node.js JavaScript runtime ✨🐢🚀✨",
+   "avatar": "https://avatars.githubusercontent.com/u/9950313?v=4",
+   "profile": "https://github.com/nodejs",
    "url": "https://github.com/nodejs/node"
   },
   {
@@ -41,6 +48,8 @@
    "lastCommit": "2026-11-12T16:19:33.000+05:30",
    "license": "MIT",
    "description": "GitLab Runner is the open source project that is used to run your CI/CD jobs and send the results back to GitLab",
+   "avatar": "https://gitlab.com/uploads/-/system/group/avatar/9970/project_avatar.png?v=1750616408",
+   "profile": "https://gitlab.com/groups/gitlab-org",
    "url": "https://gitlab.com/gitlab-org/gitlab-runner"
   },
   {
@@ -49,7 +58,19 @@
    "lastCommit": "2026-11-12T11:47:00+00:00",
    "license": "Apache-2.0",
    "description": "AUI - Atlassian User Interface library.",
+   "avatar": "https://bitbucket.org/account/atlassian/avatar/",
+   "profile": "https://bitbucket.org/%7B02b941e3-cfaa-40f9-9a58-cec53e20bdc3%7D/",
    "url": "https://bitbucket.org/atlassian/aui"
+  },
+  {
+   "name": "any-pr",
+   "maintainer": "any-pr",
+   "lastCommit": "2026-11-02T12:30:33Z",
+   "license": "MIT",
+   "description": null,
+   "avatar": "https://avatars.githubusercontent.com/u/336567357?v=4",
+   "profile": "https://github.com/any-pr",
+   "url": "https://github.com/any-pr/any-pr"
   }
  ]
 }
