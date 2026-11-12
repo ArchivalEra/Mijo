@@ -1,0 +1,85 @@
+name: Deploy to isui.ren
+
+# 站点上线：派生 catalogue → 推 site/ 到 isui.ren-heart@deploy 的 Mijo/ 目录。
+# 与 S26-1_202609、MangoMesa 同一模式：产物只写自己那个 slot 目录，
+# 其余目录由各自的仓维护（heart 的 deploy 分支是多个 slot 的共用平面）。
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-mijo
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build catalogue & push to isui.ren-heart
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm install -g @hust-open-atom-club/atomgit-cli@0.7.4 --ignore-scripts --no-audit --no-fund
+
+      - name: Derive catalogue
+        env:
+          AGCLI_TOKEN: ${{ secrets.MJ_GITCODE_TOKEN }}
+          MJ_GITCODE_TOKEN: ${{ secrets.MJ_GITCODE_TOKEN }}
+          MJ_GITHUB_TOKEN: ${{ secrets.MJ_GITHUB_TOKEN }}
+          MJ_GITEE_TOKEN: ${{ secrets.MJ_GITEE_TOKEN }}
+          MJ_CNB_TOKEN: ${{ secrets.MJ_CNB_TOKEN }}
+          MJ_GITLAB_TOKEN: ${{ secrets.MJ_GITLAB_TOKEN }}
+          MJ_BITBUCKET_TOKEN: ${{ secrets.MJ_BITBUCKET_TOKEN }}
+        run: node scripts/generate-catalogue.mjs
+
+      - name: Deploy to isui.ren-heart@deploy (Mijo/ slot only, no force push)
+        env:
+          HEART_DEPLOY_PAT: ${{ secrets.HEART_DEPLOY_PAT }}
+          SLOT: Mijo
+        run: |
+          set -euo pipefail
+          if [ -z "${HEART_DEPLOY_PAT:-}" ]; then
+            echo "::error::HEART_DEPLOY_PAT is not configured"
+            exit 1
+          fi
+
+          # 普通 clone（不是 --depth 1），因为要 append 提交而不是重建分支
+          rm -rf /tmp/heart-deploy
+          git clone --branch deploy \
+            "https://x-access-token:${HEART_DEPLOY_PAT}@github.com/ArchivalEra/isui.ren-heart.git" \
+            /tmp/heart-deploy
+
+          cd /tmp/heart-deploy
+          # 只动自己那一格；别的 slot 由各自的仓维护
+          mkdir -p "$SLOT"
+          rm -rf "$SLOT"
+          mkdir -p "$SLOT"
+          cp -r "$GITHUB_WORKSPACE/site/." "$SLOT"/
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$SLOT"
+
+          if git diff --staged --quiet; then
+            echo "No site changes to commit."
+            exit 0
+          fi
+
+          # 普通 push：deploy 分支是多仓共用的，绝不 force——
+          # force 会抹掉别的仓刚推上去的 slot（heart 侧同一个坑踩过）
+          git commit -m "deploy: update $SLOT from ${GITHUB_SHA:0:8} at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git pull --rebase origin deploy || true
+          git push origin deploy
+          echo "Deployed $SLOT to isui.ren-heart@deploy"
