@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-12T12:20:38.707Z",
+ "generatedAt": "2026-11-12T12:28:51.102Z",
  "note": null,
  "entries": [
   {
@@ -10,6 +10,22 @@
    "license": "GPL-2.0",
    "description": "a git catalogue for every human and machine",
    "url": "https://gitcode.com/ArchivalEra/Mijo"
+  },
+  {
+   "name": "arkui_ace_engine",
+   "maintainer": "openharmony_admin",
+   "lastCommit": "2025-09-13T13:21:35.000Z",
+   "license": "Apache-2.0",
+   "description": "The OpenHarmony JS UI framework provides basic, container, and canvas UI components and standard CSS animation capabilities. It supports the web-development-like programming paradigm.",
+   "url": "https://gitee.com/openharmony/arkui_ace_engine"
+  },
+  {
+   "name": "node",
+   "maintainer": "nodejs",
+   "lastCommit": "2026-11-12T10:26:03.000Z",
+   "license": "NOASSERTION",
+   "description": "Node.js JavaScript runtime ✨🐢🚀✨",
+   "url": "https://github.com/nodejs/node"
   }
  ]
 }
