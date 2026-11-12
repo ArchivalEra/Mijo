@@ -30,6 +30,7 @@
 
 # ---------- 3. 放行 CI / 平台配置目录 ----------
 !/.github/
+!/.gitcode/
 !/.gitlab/
 !/.gitee/
 !/.atomgit/
