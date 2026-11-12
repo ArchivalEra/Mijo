@@ -72,6 +72,7 @@ async function viaAgCli(ref) {
     maintainer: repo.owner ?? ref.owner,
     lastCommit,
     license: repo.license ?? null,
+    description: repo.description || null,
     url: ref.url,
   };
 }
@@ -113,6 +114,7 @@ async function main() {
           maintainer: r.owner?.username ?? r.owner?.login ?? ref.owner,
           lastCommit: r.pushedAt ?? r.updatedAt ?? null,
           license: r.license ?? null,
+          description: r.description || null,
           url: ref.url,
         });
       }

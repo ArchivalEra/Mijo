@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-12T11:55:08.065Z",
+ "generatedAt": "2026-11-12T12:20:15.856Z",
  "note": null,
  "entries": [
   {
@@ -8,6 +8,7 @@
    "maintainer": "ArchivalEra",
    "lastCommit": "2026-11-12T19:43:45+08:00",
    "license": "GPL-2.0",
+   "description": "a git catalogue for every human and machine",
    "url": "https://gitcode.com/ArchivalEra/Mijo"
   }
  ]
