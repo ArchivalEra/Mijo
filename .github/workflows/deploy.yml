@@ -13,7 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  # write 是给「提交派生的 catalogue.json」用的（heart 从仓库拉，不提交就会读到旧版）
+  contents: write
 
 jobs:
   deploy:
