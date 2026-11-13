@@ -1,0 +1,84 @@
+name: Code quality assessment
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '7 6 * * 1'
+  pull_request:
+
+permissions:
+  contents: read
+
+# 本仓已有判据逐条 record()（零新增规则——shellcheck 是对既有 shell 壳的
+# 外部验证，不是新 lint）。失败如实报 rc。
+jobs:
+  assess:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Install ag-cli
+        run: npm install -g @hust-open-atom-club/atomgit-cli@0.7.4 --ignore-scripts --no-audit --no-fund
+
+      - name: Run checks
+        env:
+          MJ_GITCODE_TOKEN: ${{ secrets.MJ_GITCODE_TOKEN }}
+          MJ_GITHUB_TOKEN: ${{ secrets.MJ_GITHUB_TOKEN }}
+          MJ_GITEE_TOKEN: ${{ secrets.MJ_GITEE_TOKEN }}
+          MJ_CNB_TOKEN: ${{ secrets.MJ_CNB_TOKEN }}
+          MJ_GITLAB_TOKEN: ${{ secrets.MJ_GITLAB_TOKEN }}
+          MJ_BITBUCKET_TOKEN: ${{ secrets.MJ_BITBUCKET_TOKEN }}
+        run: |
+          set +e
+          : > results.tsv
+          record() { printf '%s\t%s\t%s\n' "$1" "$2" "$3" >> results.tsv; }
+
+          record 'tsc' 'tsc --noEmit (checkJs, scripts/)' "$(npx tsc --noEmit >/dev/null 2>&1; echo $?)"
+
+          # shellcheck：既有 shell 壳（ag.sh）+ 本 workflow 提取出的 run 块
+          shellcheck -S warning -s sh scripts/ag.sh > /dev/null 2>&1
+          record 'shellcheck-ag' 'shellcheck scripts/ag.sh' "$?"
+
+          node - <<'NODE' > /dev/null 2>&1
+          const fs=require('fs'), y=require('yaml');
+          const d=y.parse(fs.readFileSync('.github/workflows/quality-assessment.yml','utf8'));
+          let i=0;
+          for (const s of Object.values(d.jobs)[0].steps){
+            if(s.run) fs.writeFileSync(`/tmp/wf-run-${++i}.sh`, s.run);
+          }
+          NODE
+          sc_fail=0
+          for f in /tmp/wf-run-*.sh; do
+            shellcheck -S warning -s bash "$f" >/dev/null 2>&1 || sc_fail=$((sc_fail+1))
+          done
+          record 'shellcheck-workflows' 'shellcheck run blocks of this workflow' "$sc_fail"
+
+          # 派生一遍 catalogue，确认数据通路没断（不入库，只验通）
+          record 'derive-catalogue' 'node scripts/generate-catalogue.mjs' "$(node scripts/generate-catalogue.mjs >/dev/null 2>&1; echo $?)"
+
+          cat results.tsv
+
+      - name: Summary
+        run: |
+          {
+            echo "## Code quality assessment — Mijo"
+            echo ""
+            echo "| Check | Command | Result |"
+            echo "|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          while IFS=$'\t' read -r n c rc; do
+            badge=$([ "$rc" = "0" ] && echo PASS || echo "FAIL (rc=$rc)")
+            printf '| %s | \`%s\` | %s |\n' "$n" "$c" "$badge" >> "$GITHUB_STEP_SUMMARY"
+          done < results.tsv
+          {
+            echo ""
+            echo "Only existing gates are recorded — shellcheck validates the shell shell, it is not a new lint."
+          } >> "$GITHUB_STEP_SUMMARY"
