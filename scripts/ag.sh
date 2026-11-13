@@ -5,7 +5,7 @@
 # 用法：AGCLI_TOKEN=<token> ./scripts/ag.sh api /repos/owner/repo --raw-output
 set -eu
 : "${AGCLI_TOKEN:?AGCLI_TOKEN is required}"
-AGCLI_BIN="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)/node_modules/.bin/ag-cli"
+AGCLI_BIN="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)/node_modules/.bin/ag-cli"
 XDG_DIR="$(mktemp -d)"
 trap 'rm -rf "$XDG_DIR"' EXIT INT TERM
 printf '%s' "$AGCLI_TOKEN" | XDG_CONFIG_HOME="$XDG_DIR" "$AGCLI_BIN" auth login --with-token >/dev/null
