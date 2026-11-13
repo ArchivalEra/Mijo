@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-13T06:58:40.292Z",
+ "generatedAt": "2026-11-13T07:43:45.162Z",
  "entries": [
   {
    "name": "mindspore",
@@ -518,7 +518,7 @@
   {
    "name": "node",
    "maintainer": "nodejs",
-   "lastCommit": "2026-11-13T03:50:53Z",
+   "lastCommit": "2026-11-13T07:28:41Z",
    "license": "NOASSERTION",
    "description": "Node.js JavaScript runtime ✨🐢🚀✨",
    "avatar": "https://avatars.githubusercontent.com/u/9950313?v=4",
@@ -1031,7 +1031,7 @@
   {
    "name": "gitlab-runner",
    "maintainer": "GitLab.org",
-   "lastCommit": "2026-11-12T12:14:59.000-05:00",
+   "lastCommit": "2026-11-13T12:45:03.000+05:30",
    "license": "MIT",
    "description": "GitLab Runner is the open source project that is used to run your CI/CD jobs and send the results back to GitLab",
    "avatar": "https://gitlab.com/uploads/-/system/group/avatar/9970/project_avatar.png?v=1750616408",
@@ -1255,7 +1255,7 @@
     },
     {
      "login": "Andrew Dunn",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/28633741/avatar.png?v=1794550326",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/28633741/avatar.png?v=1794554140",
      "url": "https://gitlab.com/andunn"
     },
     {
@@ -1519,6 +1519,11 @@
      "url": null
     },
     {
+     "login": "Frederic Morin",
+     "avatar": null,
+     "url": null
+    },
+    {
      "login": "Andrew G. Dunn",
      "avatar": null,
      "url": null
@@ -1532,14 +1537,9 @@
      "login": "Andrew Bimba",
      "avatar": null,
      "url": null
-    },
-    {
-     "login": "Jack Whelpton",
-     "avatar": null,
-     "url": null
     }
    ],
-   "contributorTotal": 247
+   "contributorTotal": 248
   },
   {
    "name": "atlassian-plugins",
@@ -1692,7 +1692,7 @@
      "url": "https://bitbucket.org/%7B2c58fd4f-96a5-40e8-af41-22da206e5c6c%7D/"
     }
    ],
-   "contributorTotal": null
+   "contributorTotal": 28
   },
   {
    "name": "mindspore",
@@ -1711,8 +1711,8 @@
     },
     {
      "login": "chenfei",
-     "avatar": null,
-     "url": null
+     "avatar": "https://foruda.gitee.com/avatar/1676902321222660791/116520_chenfei_1578918247.jpg",
+     "url": "https://gitee.com/chenfei"
     },
     {
      "login": "caifubi",
@@ -1891,8 +1891,8 @@
     },
     {
      "login": "sunsuodong",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/sunsuodong"
     },
     {
      "login": "shenwei41",
@@ -2001,13 +2001,13 @@
     },
     {
      "login": "jjfeing",
-     "avatar": "https://foruda.gitee.com/avatar/1677072201833701798/6574854_jjfeing_1584438580.png",
-     "url": "https://gitee.com/jjfeing"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "zhaozhenlong",
-     "avatar": "https://gitee.com/assets/no_portrait.png",
-     "url": "https://gitee.com/zhaozhenlong"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "linqingke",
@@ -2208,14 +2208,14 @@
    "contributorTotal": null
   },
   {
-   "name": "git-sdk",
-   "maintainer": "xindiwo",
-   "lastCommit": "2026-09-19T03:07:16.000Z",
-   "license": "MIT",
-   "description": "git-sdk",
+   "name": "feedback",
+   "maintainer": "cnb",
+   "lastCommit": "2026-11-13T05:55:18.000Z",
+   "license": "",
+   "description": "用户反馈专用",
    "avatar": null,
-   "profile": "https://cnb.cool/xindiwo",
-   "url": "https://cnb.cool/xindiwo/git-sdk"
+   "profile": "https://cnb.cool/cnb",
+   "url": "https://cnb.cool/cnb/feedback"
   }
  ]
 }
