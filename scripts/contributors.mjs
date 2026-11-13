@@ -16,6 +16,11 @@
 //
 // 实现里各平台是独立 adapter，共享同一个外接口。新增平台不改调用点。
 
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+
+const run = promisify(execFile);
+
 const UA = { 'User-Agent': 'mijo-catalogue' };
 const TIMEOUT_MS = 12000;
 const PAGE_SIZE = 100;
@@ -104,8 +109,11 @@ async function gitlab(ref, maxPeople) {
 
   /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
   const people = [];
-  for (const c of r.data.slice(0, maxPeople)) {
+  // 全员查头像（不按位次跳过 —— 跳过的位在页面上会静默变成首字母）。
+  // 逐人一次请求，串行 + 轻节流，避免 100 次连发被 429。
+  for (const [i, c] of r.data.slice(0, maxPeople).entries()) {
     const name = c.name || null;
+    if (i > 0 && i % 10 === 0) await new Promise(res => setTimeout(res, 120));
     // email 只在这里用于猜 username，绝不写进返回值或 catalogue
     const local = String(c.email || '').split('@')[0];
     let avatar = null, url = null;
@@ -137,9 +145,10 @@ async function gitee(ref, maxPeople) {
 
   /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
   const people = [];
-  for (const c of r.data.slice(0, maxPeople)) {
+  for (const [i, c] of r.data.slice(0, maxPeople).entries()) {
     const name = c.name || null;
     let avatar = null, profile = null;
+    if (i > 0 && i % 10 === 0) await new Promise(res => setTimeout(res, 120));
     if (name && /^[A-Za-z0-9_.-]+$/.test(name)) {
       const u = await j(`https://gitee.com/api/v5/users/${encodeURIComponent(name)}`);
       const hit = u.data && !u.data.message ? u.data : null;
@@ -176,8 +185,58 @@ async function bitbucket(ref, maxPeople) {
   return { total: null, people: [...seen.values()] };
 }
 
+/**
+ * GitCode / AtomGit：contributors 走 ag-cli（API 需要令牌，ag-cli 自己带登录态）。
+ * 返回 name + contributions + email；email 只用于判空，不外泄。
+ * 头像与主页：contributors 的 name 就是 username，查 /users/{name} 拿
+ * avatar_url + html_url（实测 mindspore/mindspore 142 人、arkui 158 人）。
+ * @param {{owner:string,repo:string}} ref @param {number} maxPeople
+ */
+async function gitcode(ref, maxPeople) {
+  const target = `${ref.owner}/${ref.repo}`;
+  /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
+  const people = [];
+
+  // ag-cli 有 AGCLI_TOKEN 时走隔离封装，否则用本机登录态
+  const binary = process.env.AGCLI_TOKEN
+    ? new URL('./ag.sh', import.meta.url).pathname
+    : 'ag-cli';
+
+  /** @param {string[]} args @returns {Promise<any>} */
+  const ag = async (args) => {
+    const { stdout } = await run(binary, args, { maxBuffer: 16 << 20 });
+    return JSON.parse(stdout);
+  };
+
+  const listUrl = `/repos/${target}/contributors?per_page=${Math.min(maxPeople, PAGE_SIZE)}`;
+  let list;
+  try {
+    list = await ag(['api', listUrl, '--raw-output']);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(list) || !list.length) return null;
+
+  for (const [i, c] of list.slice(0, maxPeople).entries()) {
+    const name = c.name || null;
+    let avatar = null, url = null;
+    if (i > 0 && i % 10 === 0) await new Promise(res => setTimeout(res, 120));
+    if (name) {
+      try {
+        const u = await ag(['api', `/users/${encodeURIComponent(name)}`, '--raw-output']);
+        if (u && !u.message) { avatar = u.avatar_url || null; url = u.html_url || null; }
+      } catch { /* 查不到就退首字母，不伪造 */ }
+    }
+    people.push({ login: name, avatar, url });
+  }
+
+  // 总数：ag-cli 的分页头拿不到 x-total，用「第一页满 100 ⇒ 至少 100」的诚实口径：
+  // 拿满一页就报 null（不谎报精确数），页面只显示「有这么多头像」。
+  return { total: null, people };
+}
+
 /** @typedef {keyof typeof ADAPTERS} SupportedPlatform */
-const ADAPTERS = { github, gitlab, gitee, bitbucket };
+const ADAPTERS = { github, gitlab, gitee, bitbucket, gitcode };
 
 /**
  * 唯一的外部接口。

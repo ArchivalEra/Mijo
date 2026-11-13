@@ -1,37 +1,29 @@
-# 一行一个仓库 URL；# 开头是注释。有人发 issue / 微信贴网址，看着行就粘进来。
+# Mijo 的仓库清单：一行一个 URL，# 开头是注释。
 #
-# CI 拉取每个仓库的名称、维护者、描述、最后 commit 时间、license，派生
-# site/catalogue.json。拉不到的（私有 / 已删除 / 无 token 权限）自动跳过并记录
-# 原因，不产出空壳条目。
+# 有人发 issue / 微信贴网址，看着行就粘进来。CI 拉取每个仓库的名称、维护者、
+# 描述、最后 commit 时间、license 与 contributors，派生 site/catalogue.json。
+# 拉不到的（私有 / 已删除 / 无 token / 限流）自动跳过并记录原因，不产空壳条目。
 #
 # 匿名可读：GitHub / Gitee / GitLab / Bitbucket 的公开仓
-# 需要 token：GitCode / AtomGit（MJ_GITCODE_TOKEN）、CNB（MJ_CNB_TOKEN）
+# 需要令牌：GitCode / AtomGit（MJ_GITCODE_TOKEN）、CNB（MJ_CNB_TOKEN）
+#
+# 下面每个平台一个示例仓，都带 10 个以上 contributors —— 用来验证各平台的
+# 头像、人物主页、contributor 总数这三条通路。
 
-# —— AtomGit / GitCode（需只读 token）——
-https://gitcode.com/ArchivalEra/Mijo
+# —— GitCode / AtomGit（142 contributors）——
+https://gitcode.com/mindspore/mindspore
 
-# —— CNB（需只读 token）——
-https://cnb.cool/xindiwo/git-sdk
-
-# —— Gitee（公开仓匿名可读）——
-https://gitee.com/openharmony/arkui_ace_engine
-
-# —— GitHub（公开仓匿名可读）——
+# —— GitHub（4554 contributors）——
 https://github.com/nodejs/node
 
-# —— GitLab（公开仓匿名可读）——
+# —— GitLab（247 contributors）——
 https://gitlab.com/gitlab-org/gitlab-runner
 
-# —— Bitbucket（公开仓匿名可读）——
-https://bitbucket.org/atlassian/aui
-
-# —— 抗压测试（大仓 / 空描述 / 高 fork）——
-https://github.com/any-pr/any-pr
-
-# —— 超大仓（多 contributor）——
-https://github.com/nexu-io/open-design
-# —— 每平台第二示例（某个仓限流/不可达时同平台仍有数据）——
-https://gitee.com/mindspore/mindspore
-https://gitlab.com/gitlab-org/gitlab
+# —— Bitbucket ——
 https://bitbucket.org/atlassian/atlassian-plugins
-https://cnb.cool/xindiwo/git-sdk-v1
+
+# —— Gitee（本机 IP 若被限流会跳过，CI 出口正常）——
+https://gitee.com/mindspore/mindspore
+
+# —— CNB（需要 MJ_CNB_TOKEN，本地没有时跳过）——
+https://cnb.cool/xindiwo/git-sdk
