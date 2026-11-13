@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-13T07:43:45.162Z",
+ "generatedAt": "2026-11-13T08:26:59.926Z",
  "entries": [
   {
    "name": "mindspore",
@@ -821,14 +821,14 @@
      "url": "https://github.com/theanarkh"
     },
     {
-     "login": "benjamingr",
-     "avatar": "https://avatars.githubusercontent.com/u/1315533?v=4",
-     "url": "https://github.com/benjamingr"
-    },
-    {
      "login": "Renegade334",
      "avatar": "https://avatars.githubusercontent.com/u/9092381?v=4",
      "url": "https://github.com/Renegade334"
+    },
+    {
+     "login": "benjamingr",
+     "avatar": "https://avatars.githubusercontent.com/u/1315533?v=4",
+     "url": "https://github.com/benjamingr"
     },
     {
      "login": "juanarbol",
@@ -1040,7 +1040,7 @@
    "contributors": [
     {
      "login": "GitLab Renovate Bot",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1794552133",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1794555733",
      "url": "https://gitlab.com/gitlab-bot"
     },
     {
@@ -1055,7 +1055,7 @@
     },
     {
      "login": "Stan Hu",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1794552209",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1794555904",
      "url": "https://gitlab.com/stanhu"
     },
     {
@@ -1135,7 +1135,7 @@
     },
     {
      "login": "Evan Read",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/2683848/avatar.png?v=1794547368",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/2683848/avatar.png?v=1794557548",
      "url": "https://gitlab.com/eread"
     },
     {
@@ -1335,7 +1335,7 @@
     },
     {
      "login": "Sepehr Heydari",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/14318798/avatar.png?v=1794467342",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/14318798/avatar.png?v=1794557254",
      "url": "https://gitlab.com/sepehrheydari72"
     },
     {
