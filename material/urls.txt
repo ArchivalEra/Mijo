@@ -27,3 +27,6 @@ https://bitbucket.org/atlassian/aui
 
 # —— 抗压测试（大仓 / 空描述 / 高 fork）——
 https://github.com/any-pr/any-pr
+
+# —— 超大仓（多 contributor）——
+https://github.com/nexu-io/open-design

@@ -31,47 +31,58 @@
   h1 { font-size: 1.4rem; font-weight: 600; margin: 0 0 .2rem; }
   .tagline { color: var(--dim); font-size: .875rem; margin: 0 0 1.75rem; }
 
-  /* ── 薯片堆（通用组件）──────────────────────────────────────── */
+  /* ── 薯片堆（通用组件）────────────────────────────────────────
+     悬停效果的全部动效只用 transform（不参与布局），所以表格列宽
+     永不重算 —— 旧实现改 margin-left 会让 td 变宽、整表抽搐（实测）。
+     chip 绝对定位在同一格：--s 是叠起位置（按序号错开成一摞），
+     --x 是摊开位置，都由 JS 注入。stack 宽度由 --n × --spread 定死。 */
   .stack {
     position: relative;
-    display: inline-flex;
-    align-items: center;
+    display: inline-block;
     height: 44px;
+    vertical-align: middle;
+    flex: 0 0 auto;
+    /* 摊开后的总宽：34 + (n-1) × 37。宽度在 DOM 插入前定死。 */
+    width: calc(34px + (var(--n, 1) - 1) * 37px);
     cursor: default;
   }
   .stack .chip {
+    position: absolute;
+    left: 0; top: 50%;
     width: 34px; height: 34px;
-    flex: 0 0 auto;
     display: grid; place-items: center;
     overflow: hidden;
-    margin-left: -12px;                 /* 叠成一摞 */
+    margin-top: -17px;
     border-radius: 50%;
     background: var(--fallback);
     border: 2px solid var(--bg);
     box-shadow: 0 1px 3px var(--shadow);
-    font-size: .8rem; font-weight: 600; color: var(--dim);
-    transition: transform .2s cubic-bezier(.2,.8,.25,1),
-                margin-left .2s cubic-bezier(.2,.8,.25,1),
-                box-shadow .2s ease;
+    font-size: 14px; font-weight: 600; color: var(--dim);
+    line-height: 1;
+    transition: transform .2s cubic-bezier(.2,.8,.25,1), box-shadow .2s ease;
+    will-change: transform;
   }
-  .stack .chip:first-child { margin-left: 0; }
+  /* 叠起状态：--s 递增错开，成一摞而非一个点；后插入的层在上面 */
+  .stack .chip { transform: translateX(var(--s, 0px)); }
+  /* 悬停整摞 → 摊开到各自的 --x */
+  .stack:hover .chip { transform: translateX(var(--x, 0px)); }
+  /* 单个头像悬停 → 放大 + 右侧邻居让位（仍是 transform） */
+  .stack .chip:hover {
+    transform: translateX(var(--x, 0px)) scale(1.4);
+    box-shadow: 0 5px 16px var(--shadow);
+    z-index: 6;
+  }
+  .stack .chip:hover ~ .chip {
+    transform: translateX(calc(var(--x, 0px) + 9px));
+  }
   .stack .chip img, .pop .item img {
     width: 100%; height: 100%; object-fit: cover; display: block;
   }
 
-  /* 悬停整摞 → 摊开成一排 */
-  .stack:hover .chip { margin-left: 3px; }
-
-  /* 单个头像悬停 → 放大 + 挤开右侧邻居 */
-  .stack .chip:hover {
-    transform: scale(1.4);
-    box-shadow: 0 5px 16px var(--shadow);
-    position: relative;
-    z-index: 6;
-  }
-  .stack .chip:hover ~ .chip { transform: translateX(9px); }
-
-  /* ── 展开的大框框 ──────────────────────────────────────────── */
+  /* ── 展开的大框框 ────────────────────────────────────────────
+     显隐由 JS 的 .is-shown 管，不用 :hover：CSS 的 pointer-events 在
+     延迟窗口内是 none，鼠标移向气泡时事件穿透 → 正在看却自动关闭
+     （实测）。开/关各 0.4s 延迟由 makeStack 的定时器实现。 */
   .pop {
     position: absolute;
     top: 100%; left: 0;
@@ -89,13 +100,13 @@
     transform: translateY(-8px) scale(.96);
     transform-origin: top left;
     transition: opacity .17s ease, transform .2s cubic-bezier(.2,.8,.25,1), visibility .17s;
+    pointer-events: none;
     z-index: 40;
   }
-  .stack:hover .pop,
-  .stack:focus-within .pop,
-  .pop:hover {
+  .pop.is-shown {
     opacity: 1; visibility: visible;
     transform: translateY(0) scale(1);
+    pointer-events: auto;              /* 打开后可被 hover，延迟关闭才有意义 */
   }
   .pop .item {
     width: 48px; height: 48px;
@@ -103,16 +114,16 @@
     overflow: hidden;
     border-radius: 11px;
     background: var(--fallback);
-    font-size: .95rem; font-weight: 600; color: var(--dim);
+    font-size: 20px; font-weight: 600; color: var(--dim);
+    line-height: 1;
     transition: transform .17s cubic-bezier(.2,.8,.25,1), box-shadow .17s;
   }
-  /* 框里单头像悬停 → 放大挤开 */
+  /* 框里单头像悬停 → 放大。grid 各格独立，不挤邻居（挤会引发重排）。 */
   .pop .item:hover {
     transform: scale(1.3);
     box-shadow: 0 7px 20px var(--shadow);
-    position: relative; z-index: 3;
+    z-index: 3;
   }
-  .pop .item:hover ~ .item { transform: translateX(7px); }
 
   /* ── 顶部维护者墙 ─────────────────────────────────────────── */
   .wall {
@@ -142,6 +153,21 @@
   td.num { color: var(--dim); font-size: .85rem; white-space: nowrap;
            font-variant-numeric: tabular-nums; }
   td.lic { color: var(--dim); font-size: .8rem; white-space: nowrap; }
+  /* 头像两列给足最小宽度：表头不折行，摊开后不挤邻居。
+     最小宽度只参与首次布局，悬停路径不碰它。 */
+  th:nth-child(2), td:nth-child(2) { min-width: 5.6rem; white-space: nowrap; }
+  th:nth-child(3), td:nth-child(3) { min-width: 12.5rem; white-space: nowrap; }
+  /* ⚠️ 不要在 td 上设 display:flex —— 那会让 td 脱离表格布局，
+     边框线断成几段独立小块（实测）。行内排布用 .cell-row。 */
+  .cell-row {
+    display: inline-flex; align-items: center; gap: .45rem;
+    vertical-align: middle;
+  }
+  .contrib-total {
+    display: inline-block; padding: .1rem .42rem;
+    font-size: .72rem; font-variant-numeric: tabular-nums;
+    color: var(--dim); border: 1px solid var(--line); border-radius: 999px;
+  }
   a { color: inherit; text-decoration: none; }
   a.repo { font-weight: 500; }
   a.repo:hover { text-decoration: underline; }
@@ -152,8 +178,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .chip, .pop, .item { transition: none !important; }
-    .stack .chip:hover, .pop .item:hover, .stack .chip:hover ~ .chip,
-    .pop .item:hover ~ .item { transform: none !important; }
+    .stack .chip:hover, .pop .item:hover { transform: none !important; }
   }
 </style>
 
@@ -168,7 +193,7 @@
 <table>
   <thead>
     <tr>
-      <th>仓库</th><th>维护者</th><th>描述</th><th>最后提交</th><th>License</th>
+      <th>仓库</th><th>维护者</th><th>Contributors</th><th>描述</th><th>最后提交</th><th>License</th>
     </tr>
   </thead>
   <tbody id="rows"></tbody>
@@ -188,18 +213,40 @@ const esc = v => String(v ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 // 头像永远指向各平台自己的 CDN —— 本仓不 serve 任何一张图。
-// 没有头像时渲染首字母，不请求任何占位图服务。
-// 头像图片失败（防盗链 / CDN 拒绝）时退回首字母：
-// 用 <img> 而不是 background-image，这样 onerror 可观测。
+// 没有头像时渲染首字母（字号与容器成比例），不请求任何占位图服务。
+// 图片加载失败（防盗链 / CDN 拒绝）时 onerror 退回首字母；
+// 用 <img> 而不是 background-image，错误才可观测。
+
+// 懒加载观察器：chip 上的图进视口才把 data-src 变成 src。
+// popup 内的图不进 observer（初始 visibility:hidden 但占布局位，
+// observer 会误判可见而全量请求），由 reveal() 在 pop 首次打开时挂 src。
+let __lazy;
+function lazyLoad(img) {
+  if (!('IntersectionObserver' in window)) { img.src = img.dataset.src; return; }
+  __lazy ||= new IntersectionObserver((entries, obs) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      const el = e.target;
+      if (el.dataset.src) { el.src = el.dataset.src; delete el.dataset.src; }
+      obs.unobserve(el);
+    }
+  }, { rootMargin: '120px' });   // 提前 120px 开始拉，滚动时不出现空窗
+  __lazy.observe(img);
+}
+
 function face(el, url, name) {
-  const initial = (name || '?').trim().charAt(0).toUpperCase();
+  const ch = (name || '').trim().charAt(0);
+  const initial = ch ? ch.toUpperCase() : '·';
   if (url) {
     const img = new Image();
     img.alt = '';
     img.referrerPolicy = 'no-referrer';       // 部分 CDN 只查 Referer，去掉即可
+    img.loading = 'lazy';
+    img.decoding = 'async';
     img.onerror = () => { el.textContent = initial; el.classList.add('initial'); };
-    img.src = url;
+    img.dataset.src = url;
     el.appendChild(img);
+    if (!el.classList.contains('item')) lazyLoad(img);
   } else {
     el.textContent = initial;
     el.classList.add('initial');
@@ -210,30 +257,87 @@ function face(el, url, name) {
 function makeStack(items, cls) {
   const stack = document.createElement('span');
   stack.className = 'stack';
+  // --n 定死 stack 宽度（摊开后的总宽），DOM 插入前就生效 ⇒ 悬停零重排。
+  stack.style.setProperty('--n', String(items.length));
+  // 叠起间距按数量自适应：少量叠得松（能数清每片），多时收紧（不拉成长条）。
+  const n = items.length;
+  const spread = n <= 1 ? 0 : n === 2 ? 14 : n === 3 ? 12 : n === 4 ? 10 : 9;
+  stack.style.setProperty('--spread', `${spread}px`);
   const pop = document.createElement('span');
   pop.className = 'pop';
 
   for (const it of items) {
-    const href = it.profile || it.url;
+    // contributor 条目只有 login/avatar/url；维护者条目有 maintainer/profile
+    const label = it.login ?? it.maintainer ?? '';
+    const href = it.profile || it.url || null;
+    const idx = stack.children.length;
+
     const chip = document.createElement('a');
     chip.className = 'chip';
-    chip.href = href;
-    chip.setAttribute('aria-label', `${it.maintainer} · ${it.name}`);
-    chip.target = '_blank';
-    chip.rel = 'noopener';
-    face(chip, it.avatar, it.maintainer);
+    if (href) { chip.href = href; chip.target = '_blank'; chip.rel = 'noopener'; }
+    chip.title = label;                        // 悬停显示名字（不拼仓库名）
+    chip.setAttribute('aria-label', label);
+    chip.style.setProperty('--x', `${idx * 37}px`);   // 摊开位置
+    chip.style.setProperty('--s', `${idx * spread}px`); // 叠起错开
+    chip.style.zIndex = String(idx + 1);
+    face(chip, it.avatar, label);
 
     const item = document.createElement('a');
     item.className = 'item';
-    item.href = href;
-    item.setAttribute('aria-label', `${it.maintainer} · ${it.name}`);
-    item.target = '_blank';
-    item.rel = 'noopener';
-    face(item, it.avatar, it.maintainer);
+    if (href) { item.href = href; item.target = '_blank'; item.rel = 'noopener'; }
+    item.title = label;
+    item.setAttribute('aria-label', label);
+    face(item, it.avatar, label);
 
     stack.appendChild(chip);
     pop.appendChild(item);
   }
+
+  // popup 首次打开才加载里面的头像（不懒加载会一次白拉 N×5 个）
+  let revealed = false;
+  const reveal = () => {
+    if (revealed) return;
+    revealed = true;
+    for (const im of pop.querySelectorAll('img[data-src]')) {
+      im.src = im.dataset.src;
+      delete im.dataset.src;
+    }
+  };
+
+  // 「在里面」= 指针在堆上或气泡上，两者都算；中间的空隙不算。
+  // 穿过空隙时先起 0.4s 关闭定时器，0.4s 内到达气泡就取消 —— 既丝滑，
+  // 又不会在用户正看着时关闭（实测 bug：pointer-events 延迟窗口内失效）。
+  const OPEN_DELAY = 400;    // 快速划过时不闪
+  const CLOSE_DELAY = 400;   // 穿过缝隙不抖
+  let openTimer = null;
+  let closeTimer = null;
+
+  const show = () => {
+    clearTimeout(closeTimer);
+    closeTimer = null;
+    if (pop.classList.contains('is-shown')) return;
+    clearTimeout(openTimer);
+    openTimer = setTimeout(() => {
+      reveal();
+      pop.classList.add('is-shown');
+    }, OPEN_DELAY);
+  };
+  const hide = () => {
+    clearTimeout(openTimer);
+    openTimer = null;
+    if (!pop.classList.contains('is-shown')) return;
+    clearTimeout(closeTimer);
+    closeTimer = setTimeout(() => pop.classList.remove('is-shown'), CLOSE_DELAY);
+  };
+
+  stack.addEventListener('mouseenter', show, { passive: true });
+  stack.addEventListener('mouseleave', hide, { passive: true });
+  stack.addEventListener('focusin', show);
+  stack.addEventListener('focusout', hide);
+  // 气泡自己是 hover 面：进去取消关闭定时器，出去重新计时
+  pop.addEventListener('mouseenter', () => { clearTimeout(closeTimer); closeTimer = null; }, { passive: true });
+  pop.addEventListener('mouseleave', hide, { passive: true });
+
   stack.appendChild(pop);
   return stack;
 }
@@ -243,7 +347,7 @@ fetch('catalogue.json').then(r => r.json()).then(d => {
   const rows = document.getElementById('rows');
 
   if (!entries.length) {
-    rows.innerHTML = '<tr><td colspan="5" class="empty">暂无条目 —— 往 material/urls.txt 里粘一个 URL。</td></tr>';
+    rows.innerHTML = '<tr><td colspan="6" class="empty">暂无条目 —— 往 material/urls.txt 里粘一个 URL。</td></tr>';
   } else {
     // 顶部墙：全部头像叠成一摞，悬停展开全部
     const wall = document.getElementById('wall-stack');
@@ -260,21 +364,44 @@ fetch('catalogue.json').then(r => r.json()).then(d => {
       tr.innerHTML =
         `<td><a class="repo" href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.name)}</a></td>` +
         `<td></td>` +
+        `<td></td>` +
         `<td class="desc">${esc(e.description ?? '—')}</td>` +
         `<td class="num">${esc(date)}</td>` +
         `<td class="lic">${esc(e.license ?? '—')}</td>`;
 
-      tr.children[1].appendChild(makeStack(same, 'row'));
+      // 维护者列
+      const mrow = document.createElement('span');
+      mrow.className = 'cell-row';
+      mrow.appendChild(makeStack(same, 'row'));
+      tr.children[1].appendChild(mrow);
+
+      // contributors 列：每仓最多 5 个头像 + 总数；没有就不渲
+      const cs = e.contributors ?? [];
+      if (cs.length) {
+        const crow = document.createElement('span');
+        crow.className = 'cell-row';
+        crow.appendChild(makeStack(cs, 'contrib'));
+        if (Number.isFinite(e.contributorTotal)) {
+          const badge = document.createElement('span');
+          badge.className = 'contrib-total';
+          badge.textContent = e.contributorTotal;
+          badge.title = `${e.contributorTotal} contributors`;
+          crow.appendChild(badge);
+        }
+        tr.children[2].appendChild(crow);
+      }
+
       rows.appendChild(tr);
     }
   }
 
+  document.getElementById('note')?.remove();
   if (d.generatedAt) {
     document.getElementById('stamp').textContent =
       'derived ' + new Date(d.generatedAt).toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
   }
 }).catch(err => {
   document.getElementById('rows').innerHTML =
-    `<tr><td colspan="5" class="empty">读取 catalogue.json 失败：${esc(err.message)}</td></tr>`;
+    `<tr><td colspan="6" class="empty">读取 catalogue.json 失败：${esc(err.message)}</td></tr>`;
 });
 </script>

@@ -140,5 +140,6 @@
 # ---------- 6. Mijo 站点与数据（本仓自有，需纳管）----------
 !/package.json
 !/package-lock.json
+!/tsconfig.json
 !/site/
 !/material/

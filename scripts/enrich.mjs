@@ -10,6 +10,16 @@
 
 const UA = { 'User-Agent': 'mijo-catalogue/1' };
 
+/**
+ * @param {string} url
+ * @param {Record<string,string>} [headers]
+ * @returns {Promise<any>}
+ */
+/**
+ * @param {string} url
+ * @param {Record<string,string>} [headers]
+ * @returns {Promise<any>}
+ */
 async function j(url, headers = {}) {
   const r = await fetch(url, { headers: { ...UA, ...headers } });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -17,38 +27,49 @@ async function j(url, headers = {}) {
 }
 
 // ── 最后 commit 时间 ────────────────────────────────────────────────────────
+/** @typedef {{owner:string,repo:string}} RepoRef */
 const LAST_COMMIT = {
-  async github({ owner, repo }, token) {
+  /** @type {Record<string, (ref: RepoRef, token?: string) => Promise<string|null>>} */
+  /** @param {{owner:string,repo:string}} ref @param {string} [token] */
+  async github(ref, token) {
+    const { owner, repo } = ref;
+    /** @type {Record<string,string>} */
     const h = token ? { Authorization: `Bearer ${token}` } : {};
     const d = await j(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`, h);
     return d?.[0]?.commit?.committer?.date ?? null;
   },
-  async gitee({ owner, repo }, token) {
+  /** @param {{owner:string,repo:string}} ref @param {string} [token] */
+  async gitee(ref, token) {
+    const { owner, repo } = ref;
     const q = token ? `&access_token=${encodeURIComponent(token)}` : '';
     const d = await j(`https://gitee.com/api/v5/repos/${owner}/${repo}/commits?per_page=1${q}`);
     return d?.[0]?.commit?.committer?.date ?? null;
   },
-  async gitlab({ owner, repo }) {
+  /** @param {{owner:string,repo:string}} ref */
+  async gitlab(ref) {
+    const { owner, repo } = ref;
     const pid = encodeURIComponent(`${owner}/${repo}`);
     const d = await j(`https://gitlab.com/api/v4/projects/${pid}/repository/commits?per_page=1`);
     return d?.[0]?.committed_date ?? null;
   },
-  async bitbucket({ owner, repo }) {
+  /** @param {{owner:string,repo:string}} ref */
+  async bitbucket(ref) {
+    const { owner, repo } = ref;
     const d = await j(`https://api.bitbucket.org/2.0/repositories/${owner}/${repo}/commits?pagelen=1`);
     return d?.values?.[0]?.date ?? null;
   },
 };
 
 // ── license（仓库对象缺字段时的兜底：读 LICENSE 文件首行判定） ───────────────
+/** @type {Record<string, (ref: RepoRef) => Promise<string|null>>} */
 const LICENSE_PROBE = {
-  async gitlab({ owner, repo }) {
-    return probeGitlabLicense(owner, repo);
-  },
-  async bitbucket({ owner, repo }) {
-    return probeBitbucketLicense(owner, repo);
-  },
+  /** @param {{owner:string,repo:string}} ref */
+  async gitlab(ref) { return probeGitlabLicense(ref.owner, ref.repo); },
+  /** @param {{owner:string,repo:string}} ref */
+  async bitbucket(ref) { return probeBitbucketLicense(ref.owner, ref.repo); },
 };
 
+/** @param {string} owner @param {string} repo */
 async function probeGitlabLicense(owner, repo) {
   const pid = encodeURIComponent(`${owner}/${repo}`);
   for (const file of ['LICENSE', 'LICENSE.md', 'LICENSE.txt', 'COPYING']) {
@@ -63,6 +84,7 @@ async function probeGitlabLicense(owner, repo) {
   return null;
 }
 
+/** @param {string} owner @param {string} repo */
 async function probeBitbucketLicense(owner, repo) {
   for (const file of ['LICENSE', 'LICENSE.md', 'LICENSE.txt', 'COPYING']) {
     try {
@@ -77,8 +99,14 @@ async function probeBitbucketLicense(owner, repo) {
 }
 
 /** 从 LICENSE 正文首段识别 SPDX 标识。只认确定无疑的几种，认不出就返回 null。 */
+/**
+ * @param {string} text LICENSE 文件正文
+ * @returns {string|null} SPDX 标识，认不出返回 null
+ */
+/** @param {string} text @returns {string|null} */
 export function identifyLicense(text) {
   const head = text.slice(0, 1200);
+  /** @param {RegExp} re */
   const has = (re) => re.test(head);
   if (has(/Apache License\s*,?\s*Version 2\.0/i)) return 'Apache-2.0';
   if (has(/MIT License/i) || (has(/Permission is hereby granted, free of charge/i) && has(/MIT/))) return 'MIT';
@@ -101,11 +129,18 @@ export function identifyLicense(text) {
  * 补齐单个条目的 lastCommit 与 license。
  * 失败不抛：补不上就保留原值，不因为补充失败而丢掉条目本身。
  */
+/**
+ * @param {Record<string,any>} entry catalogue 条目
+ * @param {{platform:string, owner:string, repo:string, url:string}} ref
+ * @param {{tokens?:Record<string,string>}} [options]
+ * @returns {Promise<Record<string,any>>}
+ */
 export async function enrich(entry, ref, { tokens = {} } = {}) {
   const platform = ref.platform;
   const out = { ...entry };
 
-  const lc = LAST_COMMIT[platform];
+  const lc = /** @type {(ref: RepoRef, token?: string) => Promise<string|null>} */ (
+    /** @type {Record<string, any>} */ (LAST_COMMIT)[platform]);
   if (lc && ref.owner && ref.repo) {
     try {
       out.lastCommit = await lc({ owner: ref.owner, repo: ref.repo }, tokens[platform]) ?? out.lastCommit;
@@ -113,7 +148,9 @@ export async function enrich(entry, ref, { tokens = {} } = {}) {
   }
 
   if (!out.license) {
-    const probe = LICENSE_PROBE[platform];
+    /** @type {(ref: RepoRef) => Promise<string|null>} */
+    const probe = /** @type {(ref: RepoRef) => Promise<string|null>} */ (
+      /** @type {Record<string, any>} */ (LICENSE_PROBE)[platform]);
     if (probe) {
       try {
         out.license = await probe({ owner: ref.owner, repo: ref.repo }) ?? null;
