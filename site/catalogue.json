@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-13T08:26:59.926Z",
+ "generatedAt": "2026-11-13T08:44:23.594Z",
  "entries": [
   {
    "name": "mindspore",
@@ -1280,7 +1280,7 @@
     },
     {
      "login": "Jeston Singh",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/42048126/avatar.png?v=1794545505",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/42048126/avatar.png?v=1794559073",
      "url": "https://gitlab.com/sjestonsingh"
     },
     {
@@ -1330,7 +1330,7 @@
     },
     {
      "login": "Maria Jose Salmeron Ibáñez",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/20946219/avatar.png?v=1794551875",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/20946219/avatar.png?v=1794559074",
      "url": "https://gitlab.com/mjsibanez"
     },
     {
@@ -2208,14 +2208,14 @@
    "contributorTotal": null
   },
   {
-   "name": "feedback",
-   "maintainer": "cnb",
-   "lastCommit": "2026-11-13T05:55:18.000Z",
-   "license": "",
-   "description": "用户反馈专用",
+   "name": "showcase",
+   "maintainer": "examples",
+   "lastCommit": "2026-11-10T09:59:40.000Z",
+   "license": "MIT",
+   "description": "CNB完整示例",
    "avatar": null,
-   "profile": "https://cnb.cool/cnb",
-   "url": "https://cnb.cool/cnb/feedback"
+   "profile": "https://cnb.cool/examples",
+   "url": "https://cnb.cool/examples/showcase"
   }
  ]
 }
