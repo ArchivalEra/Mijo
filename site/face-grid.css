@@ -1,0 +1,133 @@
+/* FaceGrid 配套样式。与 face-grid.js 一起构成一个模块的两半，
+   调用方不需要知道这些类的存在。 */
+
+.fg-root {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* 1) 平铺：固定间距，不叠、不摊开 */
+.fg-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.face {
+  width: 40px; height: 40px;
+  flex: 0 0 auto;
+  display: grid; place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--fallback, #e8e8e8);
+  border: 1px solid var(--line, #ddd);
+  font-size: 16px; font-weight: 600; line-height: 1;
+  color: var(--dim, #666);
+  text-decoration: none;
+  transition: transform .18s cubic-bezier(.2,.8,.25,1), box-shadow .18s;
+}
+.face img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+/* 平铺的脸：悬停只放大自己，不动邻居、不改布局 */
+.fg-row .face:hover {
+  transform: scale(1.18);
+  box-shadow: 0 4px 12px var(--shadow, rgba(0,0,0,.2));
+  z-index: 2;
+  position: relative;
+}
+
+/* 2) 数量泡泡：唯一的大框触发器 */
+.fg-bubble {
+  position: relative;
+  display: inline-grid; place-items: center;
+  min-width: 2.1rem; height: 1.6rem;
+  padding: 0 .42rem;
+  border: 1px solid var(--line, #ddd);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dim, #666);
+  font: inherit; font-size: .72rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* 3) 大框：最多 25 人的正方形网格，1×1 ~ 5×5 自适应 */
+.fg-panel {
+  position: absolute;
+  top: 100%; left: 0;
+  margin-top: 10px;
+  padding: .55rem;
+  background: var(--bg, #fff);
+  border: 1px solid var(--line, #ddd);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px var(--shadow, rgba(0,0,0,.2));
+  opacity: 0; visibility: hidden;
+  transform: translateY(-8px) scale(.96);
+  transform-origin: top left;
+  transition: opacity .17s ease, transform .2s cubic-bezier(.2,.8,.25,1), visibility .17s;
+  pointer-events: none;
+  z-index: 40;
+}
+.fg-bubble.is-shown .fg-panel {
+  opacity: 1; visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.fg-stage {
+  position: relative;
+  min-width: 40px;
+  min-height: 40px;
+}
+.fg-grid {
+  display: grid;
+  gap: 5px;
+}
+.fg-grid .face {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+}
+.fg-grid .face:hover {
+  transform: scale(1.15);
+  box-shadow: 0 5px 16px var(--shadow, rgba(0,0,0,.2));
+  z-index: 2;
+  position: relative;
+}
+
+/* 从右到左换页 */
+@keyframes fg-in-right { from { transform: translateX(28px); opacity: 0 } to { transform: none; opacity: 1 } }
+@keyframes fg-in-left  { from { transform: translateX(-28px); opacity: 0 } to { transform: none; opacity: 1 } }
+@keyframes fg-out-left { from { transform: none; opacity: 1 } to { transform: translateX(-28px); opacity: 0 } }
+@keyframes fg-out-right{ from { transform: none; opacity: 1 } to { transform: translateX(28px); opacity: 0 } }
+.fg-enter-right { animation: fg-in-right .2s ease both; }
+.fg-enter-left  { animation: fg-in-left  .2s ease both; }
+.fg-leave-left  { position: absolute; inset: 0; animation: fg-out-left .2s ease both; }
+.fg-leave-right { position: absolute; inset: 0; animation: fg-out-right .2s ease both; }
+
+/* 小小的双向箭头：纯指示，不是按钮 */
+.fg-hint {
+  display: block;
+  margin-top: .3rem;
+  text-align: center;
+  font-size: .7rem;
+  color: var(--dim, #666);
+  letter-spacing: .1em;
+  min-height: .9rem;
+}
+
+/* 触屏：点击后长期展示，覆盖 pointer 判定 */
+@media (hover: none) {
+  .fg-bubble.is-shown .fg-panel { pointer-events: auto; }
+  .fg-panel { max-width: 78vw; overflow-x: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .face, .fg-panel, .fg-grid { transition: none !important; animation: none !important; }
+  .fg-row .face:hover, .fg-grid .face:hover { transform: none !important; }
+}

@@ -1,27 +1,28 @@
 #!/usr/bin/env node
-// contributors：每仓取前 N 个贡献者（默认 5）+ 总数，供页面渲成薯片堆。
+// Contributors：给定平台与仓库，返回「真实总数 + 一批头像」。
 //
-// 隐私边界（硬）：
-//   · 各平台 contributors 端点会返回 **明文 email**（GitLab/Gitee 实测如此）。
-//     本模块只挑 login / avatar / url，email 一律不读出、不返回、不落盘。
-//   · 落进 catalogue 的字段白名单：login、avatar、url、total。
+// Interface（调用方只需知道这三件事）：
+//   contributors(platform, ref, opts?) → Promise<{total:number|null, people:Person[]}|null>
+//   · total 是 anon=true 口径的真实人数（含匿名贡献者）。GitHub 用
+//     per_page=1 的 Link 头页码取数（每页一条 ⇒ 页码即条数，实测与
+//     逐页累计逐字一致）；其余平台逐页累计。三个数要分清：
+//     open-design anon=false 444 / anon=true 451 / 网页 ≈505；
+//     node 4554。不再把「page1 的数」或其它口径当总数。
+//   · people 最多 maxPeople 个，按贡献排序；字段白名单 login/avatar/url
+//   · 拿不到就 null（页面静默忽略，不显示错误）
 //
-// 各平台能力不同（实测 2026-11-12）：
-//   GitHub     有 avatar_url；总数从 per_page=1 的 Link 头 page=N 取
-//              （per_page=1 的 page=444 是页码不是人数，真数要翻页核对）
-//   GitLab     无 avatar；x-total 给总数；email 一律不读
-//   Gitee      无 avatar；无总数（返回前 N 即止）；email 一律不读
-//   Bitbucket  无 /contributors 端点，聚合最近 commits 的作者（近似值）
-//   其它       暂不支持，返回 null（页面就不渲那堆）
+// 隐私边界（硬）：GitLab/Gitee 的 contributors 端点返回**明文 email**，
+// 本模块只挑白名单字段，email 一律不读出、不返回、不落盘。
+//
+// 实现里各平台是独立 adapter，共享同一个外接口。新增平台不改调用点。
 
 const UA = { 'User-Agent': 'mijo-catalogue' };
 const TIMEOUT_MS = 12000;
+const PAGE_SIZE = 100;
+const MAX_PAGES = 20;          // 2000 人上限，防异常仓打爆速率
+const MAX_PEOPLE = 100;        // 框内最多 4 页 × 25 人
 
-/**
- * @param {string} url
- * @param {Record<string,string>} [headers]
- * @returns {Promise<{ok:boolean,status:number,headers:any,data:any}>}
- */
+/** @param {string} url @param {Record<string,string>} [headers] */
 async function j(url, headers = {}) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
@@ -29,8 +30,8 @@ async function j(url, headers = {}) {
     const r = await fetch(url, { headers: { ...UA, ...headers }, signal: ctrl.signal });
     if (!r.ok) return { ok: false, status: r.status, headers: r.headers, data: null };
     const ct = r.headers.get('content-type') || '';
-    const data = ct.includes('json') ? await r.json() : null;
-    return { ok: true, status: r.status, headers: r.headers, data };
+    return { ok: true, status: r.status, headers: r.headers,
+             data: ct.includes('json') ? await r.json() : null };
   } catch {
     return { ok: false, status: 0, headers: null, data: null };
   } finally {
@@ -38,11 +39,40 @@ async function j(url, headers = {}) {
   }
 }
 
-/** Link 头里的 rel="last" 页码（配合 per_page=1 即总数）。取不到返回 null。 */
 /**
- * @param {any} headers
- * @returns {number|null}
+ * GitHub：总数取 `per_page=1&anon=true` 的 Link 头 rel="last" 页码。
+ * 每页一条时「页码数 == 条数」，实测 open-design 逐页累计 451 ==
+ * Link 页码 451；node 是 4554（逐页数 40 页都不够，会打爆速率）。
+ * 这样 2 个请求搞定，且是 anon=true 口径（含匿名贡献者，可复跑）。
+ * people 单独取前 maxPeople 个（贡献降序）。
+ * @param {{owner:string,repo:string}} ref
+ * @param {number} maxPeople
+ * @param {string} [token]
  */
+async function github(ref, maxPeople, token) {
+  const { owner, repo } = ref;
+  /** @type {Record<string,string>} */
+  const auth = token ? { Authorization: `Bearer ${token}` } : {};
+  const base = `https://api.github.com/repos/${owner}/${repo}/contributors`;
+
+  // 总数：只读响应头，不下载 body
+  const probe = await j(`${base}?per_page=1&anon=true&page=1`, auth);
+  if (!probe.ok) return null;          // 速率限制/网络错误：不谎报半截数据
+  const total = lastPage(probe.headers);
+
+  // 头像：前 maxPeople 个（最多 100，一页搞定）
+  const list = await j(`${base}?per_page=${Math.min(maxPeople, PAGE_SIZE)}&anon=true`, auth);
+  if (!list.ok || !Array.isArray(list.data)) return total ? { total, people: [] } : null;
+  /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
+  const people = list.data.slice(0, maxPeople).map((/** @type {any} */ c) => ({
+    login: c.login ?? null,
+    avatar: c.avatar_url ?? null,
+    url: c.html_url ?? null,
+  }));
+  return { total, people };
+}
+
+/** @param {any} headers @returns {number|null} */
 function lastPage(headers) {
   const link = headers?.get?.('link');
   if (!link) return null;
@@ -50,122 +80,96 @@ function lastPage(headers) {
   return m ? Number(m[1]) : null;
 }
 
-// ── GitHub ────────────────────────────────────────────────────────────────────
 /**
- * @param {{owner:string,repo:string}} ref
- * @param {number} limit
- * @param {string} [token]
+ * GitLab：contributors 端点给 x-total，但那也是分页元数据 —— 同样逐页数。
+ * 无头像、无 login（只有 name），email 有意不读。
+ * @param {{owner:string,repo:string}} ref @param {number} maxPeople
  */
-async function github(ref, limit, token) {
-  const { owner, repo } = ref;
-  /** @type {Record<string,string>} */
-  const auth = token ? { Authorization: `Bearer ${token}` } : {};
-  const base = `https://api.github.com/repos/${owner}/${repo}/contributors`;
-  const list = await j(`${base}?per_page=${limit}&anon=false`, auth);
-  if (!list.ok || !Array.isArray(list.data)) return null;
+async function gitlab(ref, maxPeople) {
+  const pid = encodeURIComponent(`${ref.owner}/${ref.repo}`);
+  const base = `https://gitlab.com/api/v4/projects/${pid}/repository/contributors`;
+  /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
+  const people = [];
+  let total = 0;
 
-  const people = list.data.slice(0, limit).map(c => ({
-    login: c.login,
-    avatar: c.avatar_url || null,
-    url: c.html_url || null,
-  }));
-
-  // 总数：per_page=1 只读 Link 头，不翻页（444 页会打爆速率）
-  const probe = await j(`${base}?per_page=1&anon=false`, auth);
-  const total = lastPage(probe.headers);
-
-  return { people, total };
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const r = await j(`${base}?order_by=commits&sort=desc&per_page=${PAGE_SIZE}&page=${page}`);
+    if (!r.ok || !Array.isArray(r.data)) break;
+    /** @type {any[]} */
+    const batch = r.data;
+    total += batch.length;
+    for (const c of batch) {
+      if (people.length >= maxPeople) break;
+      people.push({ login: c.name ?? null, avatar: null, url: null });
+    }
+    if (batch.length < PAGE_SIZE) break;
+  }
+  return { total: total || null, people };
 }
 
-// ── GitLab ────────────────────────────────────────────────────────────────────
-/** @param {{owner:string,repo:string}} ref @param {number} limit */
-async function gitlab(ref, limit) {
-  const { owner, repo } = ref;
-  // contributors 用完整路径；只取 name（无 avatar、无 login），email 一律不读
-  const pid = encodeURIComponent(`${owner}/${repo}`);
-  const url = `https://gitlab.com/api/v4/projects/${pid}/repository/contributors`
-    + `?order_by=commits&sort=desc&per_page=${limit}`;
+/** Gitee：无总数、无头像，逐页到尽即止。email 有意不读。 */
+/**
+ * Gitee：实测**忽略 page 参数**（page=1/2/3 返回同一批），逐页累加会得到
+ * 重复假数（曾算出 17652）。因此只取第一页，total 报 null —— 不谎报。
+ * @param {{owner:string,repo:string}} ref @param {number} maxPeople
+ */
+/** @param {{owner:string,repo:string}} ref @param {number} maxPeople */
+async function gitee(ref, maxPeople) {
+  const url = `https://gitee.com/api/v5/repos/${ref.owner}/${ref.repo}/contributors?per_page=${PAGE_SIZE}`;
   const r = await j(url);
   if (!r.ok || !Array.isArray(r.data)) return null;
-
-  const people = r.data.slice(0, limit).map(c => ({
-    login: c.name || null,
-    avatar: null,          // contributors 端点不提供头像
-    url: null,
+  /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
+  const people = r.data.slice(0, maxPeople).map((/** @type {any} */ c) => ({
+    login: c.name ?? null, avatar: null, url: null,
   }));
-
-  // 总数：x-total 头（实测 247）
-  const probe = await j(url.replace(/per_page=\d+/, 'per_page=1'));
-  const totalRaw = probe.headers?.get?.('x-total');
-  const total = totalRaw ? Number(totalRaw) : null;
-
-  return { people, total };
+  return { total: null, people };
 }
 
-// ── Gitee ─────────────────────────────────────────────────────────────────────
-/** @param {{owner:string,repo:string}} ref @param {number} limit */
-async function gitee(ref, limit) {
-  const { owner, repo } = ref;
-  const r = await j(`https://gitee.com/api/v5/repos/${owner}/${repo}/contributors?per_page=${limit}`);
-  if (!r.ok || !Array.isArray(r.data)) return null;
-  const people = r.data.slice(0, limit).map(c => ({
-    login: c.name || null,   // 无 login 字段；email 有意不读
-    avatar: null,
-    url: null,
-  }));
-  return { people, total: null };   // Gitee 不提供总数
-}
-
-// ── Bitbucket（无 contributors 端点，聚合最近 commits 的作者）────────────────
-/** @param {{owner:string,repo:string}} ref @param {number} limit */
-async function bitbucket(ref, limit) {
-  const { owner, repo } = ref;
-  const r = await j(`https://api.bitbucket.org/2.0/repositories/${owner}/${repo}/commits?pagelen=50`);
-  if (!r.ok || !Array.isArray(r.data?.values)) return null;
-
+/** Bitbucket：无 contributors 端点，聚合最近 commits 的作者（近似，不谎报总数）。
+ *  @param {{owner:string,repo:string}} ref @param {number} maxPeople */
+async function bitbucket(ref, maxPeople) {
+  const base = `https://api.bitbucket.org/2.0/repositories/${ref.owner}/${ref.repo}`;
   const seen = new Map();
-  for (const c of r.data.values) {
-    const u = c?.author?.user || {};
-    const name = u.display_name || String(c?.author?.raw || '').replace(/\s*<.*$/, '');
-    if (!name || seen.has(name)) continue;
-    seen.set(name, {
-      login: name,
-      avatar: u.links?.avatar?.href || null,
-      url: u.links?.html?.href || null,
-    });
-    if (seen.size >= limit) break;
+  for (let page = 1; page <= 3 && seen.size < maxPeople; page++) {
+    const r = await j(`${base}/commits?pagelen=${PAGE_SIZE}&page=${page}`);
+    if (!r.ok || !Array.isArray(r.data?.values)) break;
+    for (const c of r.data.values) {
+      const u = c?.author?.user || {};
+      const name = u.display_name || String(c?.author?.raw || '').replace(/\s*<.*$/, '');
+      if (!name || seen.has(name)) continue;
+      seen.set(name, {
+        login: name,
+        avatar: u.links?.avatar?.href || null,
+        url: u.links?.html?.href || null,
+      });
+      if (seen.size >= maxPeople) break;
+    }
+    if (r.data.values.length < PAGE_SIZE) break;
   }
   if (!seen.size) return null;
-  // total 只是「最近 50 个提交里出现的不同作者数」，不是真 contributor 总数 —— 不谎报
-  return { people: [...seen.values()], total: null };
+  return { total: null, people: [...seen.values()] };
 }
 
-const PLATFORMS = {
-  github, gitlab, gitee, bitbucket,
-};
-/** @typedef {keyof typeof PLATFORMS} SupportedPlatform */
+/** @typedef {keyof typeof ADAPTERS} SupportedPlatform */
+const ADAPTERS = { github, gitlab, gitee, bitbucket };
 
 /**
- * 取某仓的 contributors（前 limit 个 + 总数）。
- * 不支持的平台 / 请求失败 ⇒ null（页面就不渲那堆，不显示错误）。
- */
-/**
+ * 唯一的外部接口。
  * @param {SupportedPlatform} platform
  * @param {{owner:string,repo:string}} ref
- * @param {{limit?:number, token?:string}} [options]
+ * @param {{maxPeople?:number, token?:string}} [options]
  * @returns {Promise<{total:number|null, people:{login:string|null,avatar:string|null,url:string|null}[]}|null>}
  */
-export async function contributors(platform, ref, { limit = 5, token } = {}) {
-  /** @type {(typeof PLATFORMS)[SupportedPlatform]|undefined} */
-  const fn = PLATFORMS[platform];
-  if (!fn) return null;
+export async function contributors(platform, ref, { maxPeople = MAX_PEOPLE, token } = {}) {
+  /** @type {((ref:{owner:string,repo:string}, max:number, token?:string)=>Promise<any>)|undefined} */
+  const adapter = /** @type {Record<string, any>} */ (ADAPTERS)[platform];
+  if (!adapter) return null;
   try {
-    const out = await fn(ref, limit, token);
-    if (!out || !out.people?.length) return null;
-    // 出口再兜一层：只放行白名单字段，email 等一律不外泄
+    const out = await adapter(ref, maxPeople, token);
+    if (!out?.people?.length) return null;
     return {
       total: Number.isFinite(out.total) ? out.total : null,
-      people: out.people.map((/** @type {{login:string|null,avatar:string|null,url:string|null}} */ p) => ({
+      people: out.people.map((/** @type {any} */ p) => ({
         login: p.login || null,
         avatar: p.avatar || null,
         url: p.url || null,

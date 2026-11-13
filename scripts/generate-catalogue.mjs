@@ -157,8 +157,10 @@ async function main() {
       }
       const withBase = await enrich(entries[entries.length - 1], ref, { tokens });
       // contributors 只取前 5 + 总数；拿不到就留空（页面不渲那一堆）
+      // 数据模块自己管分页/限流/隐私；这里只要结果。
+      // 平铺 5 个 + 框内换页，共取 100 个头像（4 页 × 25）。
       const contrib = await contributors(/** @type {any} */ (ref.platform), ref, {
-        limit: 5,
+        maxPeople: 100,
         token: tokens[ref.platform],
       }).catch(() => null);
       entries[entries.length - 1] = contrib
