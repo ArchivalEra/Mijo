@@ -44,6 +44,23 @@ jobs:
           MJ_BITBUCKET_TOKEN: ${{ secrets.MJ_BITBUCKET_TOKEN }}
         run: node scripts/generate-catalogue.mjs
 
+      - name: Commit generated catalogue
+        # 必须先提交再 dispatch —— heart 拉的是**仓库里的** site/，
+        # 不是本次 job 的临时产物。不提交，heart 会取到上一版
+        # （实测：generatedAt 一直停在上一次，contributors 也是旧的）。
+        run: |
+          if git diff --quiet -- site/catalogue.json; then
+            echo "catalogue unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/catalogue.json
+          git commit -m "chore(catalogue): auto-derived from material/urls.txt"
+          # catalogue.yml 也在提交同一个文件，先 rebase 再推，避免互相顶掉
+          git pull --rebase --autostash origin main || true
+          git push
+
       - name: Trigger isui.ren-heart deploy (dispatch, no cross-repo write)
         # Mijo 不持有 isui.ren-heart 的写权限，也不去推它的 deploy 分支——
         # 那会与别的 slot 仓抢同一个分支。改为触发 heart 的 deploy workflow，
