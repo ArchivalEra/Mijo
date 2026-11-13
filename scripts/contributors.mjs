@@ -235,8 +235,37 @@ async function gitcode(ref, maxPeople) {
   return { total: null, people };
 }
 
+/**
+ * CNB：contributors 走 REST（SDK 的 contributor 模型只有 name/email/
+ * contributions，无头像无登录名 —— 只取 name 做首字母）。
+ * 需要令牌（api.cnb.cool 匿名 401），CI 里是 MJ_CNB_TOKEN。
+ * @param {{owner:string,repo:string}} ref @param {number} maxPeople
+ */
+async function cnb(ref, maxPeople) {
+  const token = process.env.MJ_CNB_TOKEN || process.env.CNB_TOKEN;
+  if (!token) return null;                       // 没令牌：静默跳过整个平台
+  /** @type {Record<string,string>} */
+  const auth = { Authorization: `Bearer ${token}` };
+
+  // CNB 的接口叫「活跃用户排行」（SDK 源码：/-/top-activity-users?top=N），
+  // 返回按活跃度排序的用户，不带提交数。
+  const base = `https://api.cnb.cool/${ref.owner}/${ref.repo}/-/top-activity-users`;
+  const r = await j(`${base}?top=${Math.min(maxPeople, PAGE_SIZE)}`, auth);
+  if (!r.ok || !Array.isArray(r.data)) return null;
+
+  /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
+  const people = r.data.slice(0, maxPeople).map((/** @type {any} */ c) => ({
+    login: c.name || c.username || null,
+    avatar: c.avatar_url || null,
+    url: c.web_url || null,
+  }));
+  // ⚠️ 这是活跃用户排行，不是完整 contributor 列表 ⇒ 不能用「返回条数」
+  // 回退总人数（会谎报）。标 noInfer 让出口跳过回退。
+  return { total: null, people, noInfer: true };
+}
+
 /** @typedef {keyof typeof ADAPTERS} SupportedPlatform */
-const ADAPTERS = { github, gitlab, gitee, bitbucket, gitcode };
+const ADAPTERS = { github, gitlab, gitee, bitbucket, gitcode, cnb };
 
 /**
  * 唯一的外部接口。
@@ -252,8 +281,13 @@ export async function contributors(platform, ref, { maxPeople = MAX_PEOPLE, toke
   try {
     const out = await adapter(ref, maxPeople, token);
     if (!out?.people?.length) return null;
+    // 总数回退：平台不给总数时，若请求 100 条只回来 N<100 条，
+    // 说明这就是全部贡献者（各平台均按贡献降序返回）⇒ total = N。
+    // 取满 100 说明还有更多，此时才保持 null（不谎报精确数）。
+    const asked = Math.min(maxPeople, PAGE_SIZE);
+    const inferred = !out.noInfer && out.people.length < asked ? out.people.length : null;
     return {
-      total: Number.isFinite(out.total) ? out.total : null,
+      total: Number.isFinite(out.total) ? out.total : inferred,
       people: out.people.map((/** @type {any} */ p) => ({
         login: p.login || null,
         avatar: p.avatar || null,

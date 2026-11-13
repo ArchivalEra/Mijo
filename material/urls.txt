@@ -26,4 +26,4 @@ https://bitbucket.org/atlassian/atlassian-plugins
 https://gitee.com/mindspore/mindspore
 
 # —— CNB（需要 MJ_CNB_TOKEN，本地没有时跳过）——
-https://cnb.cool/xindiwo/git-sdk
+https://cnb.cool/cnb/feedback
