@@ -103,19 +103,26 @@ fetch('catalogue.json').then(r => r.json()).then(d => {
         `<td class="num">${esc(date)}</td>` +
         `<td class="lic">${esc(e.license ?? '—')}</td>`;
 
-      // 维护者：单个头像（外链，失败退首字母）
-      const owner = document.createElement('span');
+      // 维护者：单个头像 + 该平台的人物主页链接
+      const owner = document.createElement(e.profile ? 'a' : 'span');
       owner.className = 'face owner-face';
       owner.title = e.maintainer ?? '';
-      owner.textContent = (e.maintainer || '?').trim().charAt(0).toUpperCase();
+      if (e.profile) {
+        owner.href = e.profile;
+        owner.target = '_blank';
+        owner.rel = 'noopener';
+      }
+      const initial = (e.maintainer || '?').trim().charAt(0).toUpperCase();
       if (e.avatar) {
         const img = new Image();
         img.alt = '';
         img.referrerPolicy = 'no-referrer';
         img.loading = 'lazy';
-        img.onerror = () => { owner.textContent = (e.maintainer || '?').trim().charAt(0).toUpperCase(); };
+        img.onerror = () => { img.remove(); owner.textContent = initial; };
         img.src = e.avatar;
         owner.appendChild(img);
+      } else {
+        owner.textContent = initial;
       }
       tr.children[1].appendChild(owner);
 

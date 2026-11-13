@@ -46,7 +46,6 @@ function face(person) {
   }
   el.title = name;
   el.setAttribute('aria-label', name);
-  el.textContent = initial;
 
   if (person.avatar) {
     const img = new Image();
@@ -54,11 +53,15 @@ function face(person) {
     img.referrerPolicy = 'no-referrer';
     img.loading = 'lazy';
     img.decoding = 'async';
-    img.onerror = () => { el.textContent = initial; el.classList.add('initial'); };
+    // 只有加载失败才退首字母；有头像时绝不先塞一个字母进去搅乱画面
+    img.onerror = () => { img.remove(); el.textContent = initial; el.classList.add('initial'); };
     // 图片由 reveal 机制统一挂 src（避免隐藏的大框一次性拉 100 张）
     img.dataset.src = person.avatar;
     el.appendChild(img);
     el.dataset.hasImage = '1';
+  } else {
+    el.textContent = initial;
+    el.classList.add('initial');
   }
   return el;
 }

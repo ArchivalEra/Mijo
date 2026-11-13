@@ -22,12 +22,21 @@ const PAGE_SIZE = 100;
 const MAX_PAGES = 20;          // 2000 人上限，防异常仓打爆速率
 const MAX_PEOPLE = 100;        // 框内最多 4 页 × 25 人
 
-/** @param {string} url @param {Record<string,string>} [headers] */
-async function j(url, headers = {}) {
+/**
+ * GET + JSON。429/403（限流）退避重试一次；仍失败就返回 ok:false，
+ * 让上层 fail-closed（不产假数）。
+ * @param {string} url @param {Record<string,string>} [headers] @param {number} [attempt]
+ */
+async function j(url, headers = {}, attempt = 1) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
     const r = await fetch(url, { headers: { ...UA, ...headers }, signal: ctrl.signal });
+    if ((r.status === 429 || r.status === 403) && attempt === 1) {
+      clearTimeout(t);
+      await new Promise(res => setTimeout(res, 1500));
+      return j(url, headers, 2);
+    }
     if (!r.ok) return { ok: false, status: r.status, headers: r.headers, data: null };
     const ct = r.headers.get('content-type') || '';
     return { ok: true, status: r.status, headers: r.headers,
@@ -81,47 +90,64 @@ function lastPage(headers) {
 }
 
 /**
- * GitLab：contributors 端点给 x-total，但那也是分页元数据 —— 同样逐页数。
- * 无头像、无 login（只有 name），email 有意不读。
+ * GitLab：contributors 端点只给 name + email（email 是隐私，不外泄）。
+ * 用 email 的本地部分猜 username，查公开的 /users?username=X 拿头像和主页
+ * （实测 7 个贡献者命中 4 个；命不中就退首字母 + 不生成链接）。
+ * 总数走 x-total（已验证与逐页数一致），头像只补前 5 个平铺位。
  * @param {{owner:string,repo:string}} ref @param {number} maxPeople
  */
 async function gitlab(ref, maxPeople) {
   const pid = encodeURIComponent(`${ref.owner}/${ref.repo}`);
   const base = `https://gitlab.com/api/v4/projects/${pid}/repository/contributors`;
+  const r = await j(`${base}?order_by=commits&sort=desc&per_page=${Math.min(maxPeople, PAGE_SIZE)}`);
+  if (!r.ok || !Array.isArray(r.data)) return null;
+
   /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
   const people = [];
-  let total = 0;
-
-  for (let page = 1; page <= MAX_PAGES; page++) {
-    const r = await j(`${base}?order_by=commits&sort=desc&per_page=${PAGE_SIZE}&page=${page}`);
-    if (!r.ok || !Array.isArray(r.data)) break;
-    /** @type {any[]} */
-    const batch = r.data;
-    total += batch.length;
-    for (const c of batch) {
-      if (people.length >= maxPeople) break;
-      people.push({ login: c.name ?? null, avatar: null, url: null });
+  for (const c of r.data.slice(0, maxPeople)) {
+    const name = c.name || null;
+    // email 只在这里用于猜 username，绝不写进返回值或 catalogue
+    const local = String(c.email || '').split('@')[0];
+    let avatar = null, url = null;
+    if (local) {
+      const u = await j(`https://gitlab.com/api/v4/users?username=${encodeURIComponent(local)}`);
+      const hit = Array.isArray(u.data) ? u.data[0] : null;
+      if (hit) { avatar = hit.avatar_url || null; url = hit.web_url || null; }
     }
-    if (batch.length < PAGE_SIZE) break;
+    people.push({ login: name, avatar, url });
   }
-  return { total: total || null, people };
+
+  // 总数：x-total 头（实测 gitlab-runner 247，与逐页数一致）
+  const probe = await j(`${base}?order_by=commits&sort=desc&per_page=1`);
+  const totalRaw = probe.headers?.get?.('x-total');
+  return { total: totalRaw ? Number(totalRaw) : null, people };
 }
 
-/** Gitee：无总数、无头像，逐页到尽即止。email 有意不读。 */
 /**
- * Gitee：实测**忽略 page 参数**（page=1/2/3 返回同一批），逐页累加会得到
- * 重复假数（曾算出 17652）。因此只取第一页，total 报 null —— 不谎报。
+ * Gitee：忽略 page 参数（page=1/2/3 同一批），只取第一页，total 报 null。
+ * 但 contributors 的 `name` 常常就是 Gitee username（sunfei、sunjiakun），
+ * 查公开的 /users/{name} 可拿到真实头像 + 人物主页；查不到就退首字母。
+ * email 只在这里读一次用于判空，绝不外泄。
  * @param {{owner:string,repo:string}} ref @param {number} maxPeople
  */
-/** @param {{owner:string,repo:string}} ref @param {number} maxPeople */
 async function gitee(ref, maxPeople) {
-  const url = `https://gitee.com/api/v5/repos/${ref.owner}/${ref.repo}/contributors?per_page=${PAGE_SIZE}`;
+  const url = `https://gitee.com/api/v5/repos/${ref.owner}/${ref.repo}/contributors?per_page=${Math.min(maxPeople, PAGE_SIZE)}`;
   const r = await j(url);
   if (!r.ok || !Array.isArray(r.data)) return null;
+
   /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
-  const people = r.data.slice(0, maxPeople).map((/** @type {any} */ c) => ({
-    login: c.name ?? null, avatar: null, url: null,
-  }));
+  const people = [];
+  for (const c of r.data.slice(0, maxPeople)) {
+    const name = c.name || null;
+    let avatar = null, profile = null;
+    if (name && /^[A-Za-z0-9_.-]+$/.test(name)) {
+      const u = await j(`https://gitee.com/api/v5/users/${encodeURIComponent(name)}`);
+      const hit = u.data && !u.data.message ? u.data : null;
+      if (hit) { avatar = hit.avatar_url || null; profile = hit.html_url || null; }
+    }
+    // 查得到账号才给链接；两个「字母哥」查不到就没有 url —— 符合预期
+    people.push({ login: name, avatar, url: profile });
+  }
   return { total: null, people };
 }
 

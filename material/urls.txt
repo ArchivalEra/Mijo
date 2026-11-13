@@ -30,3 +30,8 @@ https://github.com/any-pr/any-pr
 
 # —— 超大仓（多 contributor）——
 https://github.com/nexu-io/open-design
+# —— 每平台第二示例（某个仓限流/不可达时同平台仍有数据）——
+https://gitee.com/mindspore/mindspore
+https://gitlab.com/gitlab-org/gitlab
+https://bitbucket.org/atlassian/atlassian-plugins
+https://cnb.cool/xindiwo/git-sdk-v1
