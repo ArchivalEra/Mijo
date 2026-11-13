@@ -236,32 +236,33 @@ async function gitcode(ref, maxPeople) {
 }
 
 /**
- * CNB：contributors 走 REST（SDK 的 contributor 模型只有 name/email/
- * contributions，无头像无登录名 —— 只取 name 做首字母）。
- * 需要令牌（api.cnb.cool 匿名 401），CI 里是 MJ_CNB_TOKEN。
+ * CNB：contributors 走 SDK 的 cnb.contributors.list()，而不是自己拼 REST ——
+ * CNB 的响应是**包装对象**（SDK 用 toItems 解 items/data 等包装键），
+ * 直接 Array.isArray 判定会误判成空。
+ * 接口本体是「活跃用户排行」/-/top-activity-users：按活跃度排序、不带提交数，
+ * 所以 total 不可推（标 noInfer，不谎报）。
  * @param {{owner:string,repo:string}} ref @param {number} maxPeople
  */
 async function cnb(ref, maxPeople) {
   const token = process.env.MJ_CNB_TOKEN || process.env.CNB_TOKEN;
-  if (!token) return null;                       // 没令牌：静默跳过整个平台
-  /** @type {Record<string,string>} */
-  const auth = { Authorization: `Bearer ${token}` };
-
-  // CNB 的接口叫「活跃用户排行」（SDK 源码：/-/top-activity-users?top=N），
-  // 返回按活跃度排序的用户，不带提交数。
-  const base = `https://api.cnb.cool/${ref.owner}/${ref.repo}/-/top-activity-users`;
-  const r = await j(`${base}?top=${Math.min(maxPeople, PAGE_SIZE)}`, auth);
-  if (!r.ok || !Array.isArray(r.data)) return null;
-
-  /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
-  const people = r.data.slice(0, maxPeople).map((/** @type {any} */ c) => ({
-    login: c.name || c.username || null,
-    avatar: c.avatar_url || null,
-    url: c.web_url || null,
-  }));
-  // ⚠️ 这是活跃用户排行，不是完整 contributor 列表 ⇒ 不能用「返回条数」
-  // 回退总人数（会谎报）。标 noInfer 让出口跳过回退。
-  return { total: null, people, noInfer: true };
+  if (!token) return null;
+  try {
+    const { CnbClient } = await import('@xindiwo/git-sdk');
+    const client = new CnbClient({ token });
+    const page = await client.contributors.list({
+      owner: ref.owner, repo: ref.repo, perPage: Math.min(maxPeople, PAGE_SIZE),
+    });
+    const items = page?.items ?? [];
+    if (!items.length) return null;
+    const people = items.slice(0, maxPeople).map((/** @type {any} */ c) => ({
+      login: c.name || c.username || null,
+      avatar: c.avatarUrl || c.avatar_url || null,
+      url: c.htmlUrl || c.web_url || null,
+    }));
+    return { total: null, people, noInfer: true };
+  } catch {
+    return null;
+  }
 }
 
 /** @typedef {keyof typeof ADAPTERS} SupportedPlatform */
