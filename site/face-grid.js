@@ -23,21 +23,21 @@ const GAP = 6;            // 平铺间距（固定，不随数量变）
 const PAGE_SIZE = 25;     // 大框每页最多 25 人
 const MAX_COLS = 5;       // 网格最多 5 列（1×1 ~ 5×5）
 
-/** HTML 转义。 */
-const esc = v => String(v ?? '').replace(/[&<>"']/g, c =>
-  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+/** HTML 转义。 @param {unknown} v */
+const ESC_MAP = /** @type {Record<string,string>} */ ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' });
+const esc = /** @param {unknown} v */ (v) => String(v ?? '').replace(/[&<>"']/g, (/** @type {string} */ c) => ESC_MAP[c] ?? c);
 
 /**
- * 一张脸：有头像用外链 img（懒加载交给 IntersectionObserver），
- * 没有就首字母。加载失败退首字母。
+ * 一张脸：统一建 <a>（无 url 时不设 href），有头像用外链 img
+ * （懒加载交给 reveal），没有就首字母。加载失败退首字母。
  * @param {{login?:string|null, avatar?:string|null, url?:string|null}} person
- * @returns {HTMLElement}
+ * @returns {HTMLAnchorElement}
  */
 function face(person) {
   const name = person.login || '';
   const ch = name.trim().charAt(0);
   const initial = ch ? ch.toUpperCase() : '·';
-  const el = document.createElement(person.url ? 'a' : 'span');
+  const el = document.createElement('a');
   el.className = 'face';
   if (person.url) {
     el.href = person.url;
@@ -58,7 +58,7 @@ function face(person) {
     // 图片由 reveal 机制统一挂 src（避免隐藏的大框一次性拉 100 张）
     img.dataset.src = person.avatar;
     el.appendChild(img);
-    el.dataset.hasImage = '1';
+    el.classList.add('has-image');
   } else {
     el.textContent = initial;
     el.classList.add('initial');
@@ -66,11 +66,14 @@ function face(person) {
   return el;
 }
 
-/** 只给「当前可见」的脸挂 src。大框换页后调用一次。 */
+/** 只给「当前可见」的脸挂 src。大框换页后调用一次。 @param {HTMLElement} root */
 function reveal(root) {
-  for (const img of root.querySelectorAll('img[data-src]')) {
-    img.src = img.dataset.src;
-    delete img.dataset.src;
+  const imgs = /** @type {NodeListOf<HTMLImageElement>} */ (root.querySelectorAll('img[data-src]'));
+  for (const img of imgs) {
+    if (img.dataset.src) {
+      img.src = img.dataset.src;
+      delete img.dataset.src;
+    }
   }
 }
 
@@ -78,8 +81,10 @@ function reveal(root) {
  * 大框：把 people 切成页，按当页人数决定网格列数（1×1 ~ 5×5）。
  * @param {{login?:string|null, avatar?:string|null, url?:string|null}[]} people
  * @param {HTMLElement} host 泡泡元素（大框挂在它里面）
+ * @returns {HTMLElement|null}
  */
 function createPanel(people, host) {
+  /** @type {{login?:string|null, avatar?:string|null, url?:string|null}[][]} */
   const pages = [];
   for (let i = 0; i < people.length; i += PAGE_SIZE) {
     pages.push(people.slice(i, i + PAGE_SIZE));
@@ -101,6 +106,7 @@ function createPanel(people, host) {
   let page = 0;
   let animating = false;
 
+  /** @param {number} direction */
   function renderPage(direction) {
     const list = pages[page];
     const cols = Math.max(1, Math.min(MAX_COLS, Math.ceil(Math.sqrt(list.length))));
@@ -115,8 +121,9 @@ function createPanel(people, host) {
     // 从右到左换页：新页从右侧进，旧页往左出
     if (direction !== 0 && stage.firstChild) {
       const old = stage.firstChild;
-      old.classList.add(direction > 0 ? 'fg-leave-left' : 'fg-leave-right');
-      old.addEventListener('animationend', () => old.remove(), { once: true });
+      const oldEl = /** @type {HTMLElement} */ (old);
+      oldEl.classList.add(direction > 0 ? 'fg-leave-left' : 'fg-leave-right');
+      oldEl.addEventListener('animationend', () => oldEl.remove(), { once: true });
     }
     if (direction > 0) grid.classList.add('fg-enter-right');
     else if (direction < 0) grid.classList.add('fg-enter-left');
@@ -127,6 +134,7 @@ function createPanel(people, host) {
     hint.dataset.page = `${page + 1}/${pages.length}`;
   }
 
+  /** @param {number} delta */
   function go(delta) {
     if (pages.length < 2 || animating) return;
     const next = page + delta;
@@ -145,6 +153,7 @@ function createPanel(people, host) {
   }, { passive: false });
 
   // 触屏滑动：水平方向换页
+  /** @type {number|null} */
   let touchX = null;
   panel.addEventListener('touchstart', ev => { touchX = ev.touches[0].clientX; }, { passive: true });
   panel.addEventListener('touchend', ev => {
@@ -197,23 +206,25 @@ export function createFaceGrid({ people, total, label = 'contributors' }) {
       // 桌面：悬停展开（0.4s 开关延迟消除缝隙抖动，但「正在看」不自动关）
       const OPEN_DELAY = 400;
       const CLOSE_DELAY = 400;
-      let openTimer = null;
-      let closeTimer = null;
+      /** @type {ReturnType<typeof setTimeout>|undefined} */
+      let openTimer = undefined;
+      /** @type {ReturnType<typeof setTimeout>|undefined} */
+      let closeTimer = undefined;
       const show = () => {
-        clearTimeout(closeTimer); closeTimer = null;
+        clearTimeout(closeTimer); closeTimer = undefined;
         if (bubble.classList.contains('is-shown')) return;
         clearTimeout(openTimer);
         openTimer = setTimeout(() => bubble.classList.add('is-shown'), OPEN_DELAY);
       };
       const hide = () => {
-        clearTimeout(openTimer); openTimer = null;
+        clearTimeout(openTimer); openTimer = undefined;
         if (!bubble.classList.contains('is-shown')) return;
         clearTimeout(closeTimer);
         closeTimer = setTimeout(() => bubble.classList.remove('is-shown'), CLOSE_DELAY);
       };
       bubble.addEventListener('mouseenter', show);
       bubble.addEventListener('mouseleave', hide);
-      panel.addEventListener('mouseenter', () => { clearTimeout(closeTimer); closeTimer = null; });
+      panel.addEventListener('mouseenter', () => { clearTimeout(closeTimer); closeTimer = undefined; });
       panel.addEventListener('mouseleave', hide);
 
       // 触屏：点击长期展示；再点收起

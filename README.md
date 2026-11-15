@@ -16,8 +16,8 @@
 
 | 平台 | 读取方式 |
 |---|---|
-| GitCode / AtomGit | `ag-cli` + 只读 token（`MJ_GITCODE_TOKEN`） |
-| CNB | `@xindiwo/git-sdk` + token（`MJ_CNB_TOKEN`） |
+| GitCode / AtomGit | 经 `ag-cli`（需平台令牌） |
+| CNB | 经 `@xindiwo/git-sdk`（需平台令牌） |
 | GitHub / Gitee / GitLab / Bitbucket | 公开仓匿名可读 |
 
 `lastCommit` 取各平台 commits 端点（不是 `pushedAt`/`updatedAt`——后者会差出几个月）；
