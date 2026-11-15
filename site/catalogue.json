@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-13T08:44:23.594Z",
+ "generatedAt": "2026-11-15T04:57:20.700Z",
  "entries": [
   {
    "name": "mindspore",
@@ -518,7 +518,7 @@
   {
    "name": "node",
    "maintainer": "nodejs",
-   "lastCommit": "2026-11-13T07:28:41Z",
+   "lastCommit": "2026-11-15T04:48:02Z",
    "license": "NOASSERTION",
    "description": "Node.js JavaScript runtime ✨🐢🚀✨",
    "avatar": "https://avatars.githubusercontent.com/u/9950313?v=4",
@@ -636,14 +636,14 @@
      "url": "https://github.com/anonrig"
     },
     {
-     "login": "mscdex",
-     "avatar": "https://avatars.githubusercontent.com/u/54666?v=4",
-     "url": "https://github.com/mscdex"
-    },
-    {
      "login": "mcollina",
      "avatar": "https://avatars.githubusercontent.com/u/52195?v=4",
      "url": "https://github.com/mcollina"
+    },
+    {
+     "login": "mscdex",
+     "avatar": "https://avatars.githubusercontent.com/u/54666?v=4",
+     "url": "https://github.com/mscdex"
     },
     {
      "login": "rvagg",
@@ -766,14 +766,14 @@
      "url": "https://github.com/koichik"
     },
     {
-     "login": "TimothyGu",
-     "avatar": "https://avatars.githubusercontent.com/u/1538624?v=4",
-     "url": "https://github.com/TimothyGu"
-    },
-    {
      "login": "gabrielschulhof",
      "avatar": "https://avatars.githubusercontent.com/u/976081?v=4",
      "url": "https://github.com/gabrielschulhof"
+    },
+    {
+     "login": "TimothyGu",
+     "avatar": "https://avatars.githubusercontent.com/u/1538624?v=4",
+     "url": "https://github.com/TimothyGu"
     },
     {
      "login": "guybedford",
@@ -816,14 +816,14 @@
      "url": "https://github.com/deokjinkim"
     },
     {
-     "login": "theanarkh",
-     "avatar": "https://avatars.githubusercontent.com/u/21155906?v=4",
-     "url": "https://github.com/theanarkh"
-    },
-    {
      "login": "Renegade334",
      "avatar": "https://avatars.githubusercontent.com/u/9092381?v=4",
      "url": "https://github.com/Renegade334"
+    },
+    {
+     "login": "theanarkh",
+     "avatar": "https://avatars.githubusercontent.com/u/21155906?v=4",
+     "url": "https://github.com/theanarkh"
     },
     {
      "login": "benjamingr",
@@ -871,14 +871,14 @@
      "url": null
     },
     {
-     "login": "BethGriggs",
-     "avatar": "https://avatars.githubusercontent.com/u/8297234?v=4",
-     "url": "https://github.com/BethGriggs"
-    },
-    {
      "login": "daeyeon",
      "avatar": "https://avatars.githubusercontent.com/u/6630703?v=4",
      "url": "https://github.com/daeyeon"
+    },
+    {
+     "login": "BethGriggs",
+     "avatar": "https://avatars.githubusercontent.com/u/8297234?v=4",
+     "url": "https://github.com/BethGriggs"
     },
     {
      "login": "joaocgreis",
@@ -926,14 +926,14 @@
      "url": "https://github.com/bzoz"
     },
     {
-     "login": "jbergstroem",
-     "avatar": "https://avatars.githubusercontent.com/u/176984?v=4",
-     "url": "https://github.com/jbergstroem"
-    },
-    {
      "login": "VoltrexKeyva",
      "avatar": "https://avatars.githubusercontent.com/u/62040526?v=4",
      "url": "https://github.com/VoltrexKeyva"
+    },
+    {
+     "login": "jbergstroem",
+     "avatar": "https://avatars.githubusercontent.com/u/176984?v=4",
+     "url": "https://github.com/jbergstroem"
     },
     {
      "login": "maclover7",
@@ -971,14 +971,14 @@
      "url": "https://github.com/ZYSzys"
     },
     {
-     "login": "gireeshpunathil",
-     "avatar": "https://avatars.githubusercontent.com/u/6447530?v=4",
-     "url": "https://github.com/gireeshpunathil"
-    },
-    {
      "login": "ShogunPanda",
      "avatar": "https://avatars.githubusercontent.com/u/201101?v=4",
      "url": "https://github.com/ShogunPanda"
+    },
+    {
+     "login": "gireeshpunathil",
+     "avatar": "https://avatars.githubusercontent.com/u/6447530?v=4",
+     "url": "https://github.com/gireeshpunathil"
     },
     {
      "login": "Flarna",
@@ -991,14 +991,14 @@
      "url": "https://github.com/ChALkeR"
     },
     {
-     "login": "srl295",
-     "avatar": "https://avatars.githubusercontent.com/u/855219?v=4",
-     "url": "https://github.com/srl295"
-    },
-    {
      "login": "cclauss",
      "avatar": "https://avatars.githubusercontent.com/u/3709715?v=4",
      "url": "https://github.com/cclauss"
+    },
+    {
+     "login": "srl295",
+     "avatar": "https://avatars.githubusercontent.com/u/855219?v=4",
+     "url": "https://github.com/srl295"
     },
     {
      "login": "bengl",
@@ -1011,6 +1011,11 @@
      "url": "https://github.com/mmalecki"
     },
     {
+     "login": "edsadr",
+     "avatar": "https://avatars.githubusercontent.com/u/1189785?v=4",
+     "url": "https://github.com/edsadr"
+    },
+    {
      "login": "seishun",
      "avatar": "https://avatars.githubusercontent.com/u/988441?v=4",
      "url": "https://github.com/seishun"
@@ -1019,19 +1024,14 @@
      "login": "dnlup",
      "avatar": "https://avatars.githubusercontent.com/u/15520377?v=4",
      "url": "https://github.com/dnlup"
-    },
-    {
-     "login": "edsadr",
-     "avatar": "https://avatars.githubusercontent.com/u/1189785?v=4",
-     "url": "https://github.com/edsadr"
     }
    ],
-   "contributorTotal": 4554
+   "contributorTotal": 4557
   },
   {
    "name": "gitlab-runner",
    "maintainer": "GitLab.org",
-   "lastCommit": "2026-11-13T12:45:03.000+05:30",
+   "lastCommit": "2026-11-13T14:53:08.000-05:00",
    "license": "MIT",
    "description": "GitLab Runner is the open source project that is used to run your CI/CD jobs and send the results back to GitLab",
    "avatar": "https://gitlab.com/uploads/-/system/group/avatar/9970/project_avatar.png?v=1750616408",
@@ -1040,7 +1040,7 @@
    "contributors": [
     {
      "login": "GitLab Renovate Bot",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1794555733",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1794717977",
      "url": "https://gitlab.com/gitlab-bot"
     },
     {
@@ -1054,14 +1054,14 @@
      "url": "https://gitlab.com/ajwalker"
     },
     {
-     "login": "Stan Hu",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1794555904",
-     "url": "https://gitlab.com/stanhu"
-    },
-    {
      "login": "Hannes Hörl",
      "avatar": null,
      "url": null
+    },
+    {
+     "login": "Stan Hu",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1794712159",
+     "url": "https://gitlab.com/stanhu"
     },
     {
      "login": "Auto Runner Releaser",
@@ -1085,13 +1085,8 @@
     },
     {
      "login": "Roshni Sarangadharan",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/21979359/avatar.png?v=1794549540",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/21979359/avatar.png?v=1794701891",
      "url": "https://gitlab.com/rsarangadharan"
-    },
-    {
-     "login": "Georgi N. Georgiev | GitLab",
-     "avatar": "https://secure.gravatar.com/avatar/45c132b4838d47f730c5f9f979358ac04e0b51cb6e74aa3b7e3ae7b3e7340179?s=80&d=identicon",
-     "url": "https://gitlab.com/ggeorgiev"
     },
     {
      "login": "Marcel Amirault",
@@ -1099,19 +1094,24 @@
      "url": "https://gitlab.com/mamirault"
     },
     {
+     "login": "Georgi N. Georgiev | GitLab",
+     "avatar": "https://secure.gravatar.com/avatar/45c132b4838d47f730c5f9f979358ac04e0b51cb6e74aa3b7e3ae7b3e7340179?s=80&d=identicon",
+     "url": "https://gitlab.com/ggeorgiev"
+    },
+    {
+     "login": "GitLab Dependency Bot",
+     "avatar": null,
+     "url": null
+    },
+    {
      "login": "Romuald Atchadé",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/8111826/avatar.png?v=1794528008",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/8111826/avatar.png?v=1794700834",
      "url": "https://gitlab.com/ratchade"
     },
     {
      "login": "Tomasz Maczukin",
      "avatar": "https://gitlab.com/uploads/-/system/user/avatar/45508/avatar.png?v=1789006391",
      "url": "https://gitlab.com/tomasz"
-    },
-    {
-     "login": "GitLab Dependency Bot",
-     "avatar": null,
-     "url": null
     },
     {
      "login": "Mikhail Mazurskiy",
@@ -1125,7 +1125,7 @@
     },
     {
      "login": "Vishal Tak",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/10764887/avatar.png?v=1794528023",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/10764887/avatar.png?v=1794711289",
      "url": "https://gitlab.com/vtak"
     },
     {
@@ -1135,7 +1135,7 @@
     },
     {
      "login": "Evan Read",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/2683848/avatar.png?v=1794557548",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/2683848/avatar.png?v=1794661030",
      "url": "https://gitlab.com/eread"
     },
     {
@@ -1179,6 +1179,11 @@
      "url": null
     },
     {
+     "login": "José M. Requena Plens",
+     "avatar": null,
+     "url": null
+    },
+    {
      "login": "Ashmit Sharma",
      "avatar": null,
      "url": null
@@ -1187,11 +1192,6 @@
      "login": "Lauren Barker",
      "avatar": "https://secure.gravatar.com/avatar/dbd43f2a1bbdbff36580828c22addd85832d1768d755851aaf2149daed7fe272?s=80&d=identicon",
      "url": "https://gitlab.com/lbarker"
-    },
-    {
-     "login": "José M. Requena Plens",
-     "avatar": null,
-     "url": null
     },
     {
      "login": "Guillaume Chauvel",
@@ -1225,12 +1225,12 @@
     },
     {
      "login": "Vikrant Singh Parihar",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/42895250/avatar.png?v=1794544277",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/42895250/avatar.png?v=1794717415",
      "url": "https://gitlab.com/pariharvikranr2000"
     },
     {
      "login": "Kam Kyrala",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19859972/avatar.png?v=1794528542",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19859972/avatar.png?v=1794715844",
      "url": "https://gitlab.com/kkyrala"
     },
     {
@@ -1245,7 +1245,7 @@
     },
     {
      "login": "Davis Bickford",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/12695721/avatar.png?v=1794528011",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/12695721/avatar.png?v=1794700801",
      "url": "https://gitlab.com/dbickford"
     },
     {
@@ -1255,7 +1255,7 @@
     },
     {
      "login": "Andrew Dunn",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/28633741/avatar.png?v=1794554140",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/28633741/avatar.png?v=1794716454",
      "url": "https://gitlab.com/andunn"
     },
     {
@@ -1280,7 +1280,7 @@
     },
     {
      "login": "Jeston Singh",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/42048126/avatar.png?v=1794559073",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/42048126/avatar.png?v=1794635457",
      "url": "https://gitlab.com/sjestonsingh"
     },
     {
@@ -1305,7 +1305,7 @@
     },
     {
      "login": "Kevin Lew",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19662303/avatar.png?v=1794538562",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19662303/avatar.png?v=1794700817",
      "url": "https://gitlab.com/klew-ext"
     },
     {
@@ -1325,12 +1325,12 @@
     },
     {
      "login": "Toon Claes",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/660180/avatar.png?v=1794528282",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/660180/avatar.png?v=1794701439",
      "url": "https://gitlab.com/toon"
     },
     {
      "login": "Maria Jose Salmeron Ibáñez",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/20946219/avatar.png?v=1794559074",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/20946219/avatar.png?v=1794717500",
      "url": "https://gitlab.com/mjsibanez"
     },
     {
@@ -1390,6 +1390,11 @@
     },
     {
      "login": "Michael Trainor",
+     "avatar": null,
+     "url": null
+    },
+    {
+     "login": "Giannis Kepas",
      "avatar": null,
      "url": null
     },
@@ -1519,22 +1524,17 @@
      "url": null
     },
     {
+     "login": "Aryan Rajput",
+     "avatar": null,
+     "url": null
+    },
+    {
+     "login": "Ricardo Carneiro",
+     "avatar": null,
+     "url": null
+    },
+    {
      "login": "Frederic Morin",
-     "avatar": null,
-     "url": null
-    },
-    {
-     "login": "Andrew G. Dunn",
-     "avatar": null,
-     "url": null
-    },
-    {
-     "login": "sornapudi suresh",
-     "avatar": null,
-     "url": null
-    },
-    {
-     "login": "Andrew Bimba",
      "avatar": null,
      "url": null
     }
