@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-15T04:57:20.700Z",
+ "generatedAt": "2026-11-15T06:20:56.374Z",
  "entries": [
   {
    "name": "mindspore",
@@ -861,16 +861,6 @@
      "url": "https://github.com/himself65"
     },
     {
-     "login": null,
-     "avatar": null,
-     "url": null
-    },
-    {
-     "login": null,
-     "avatar": null,
-     "url": null
-    },
-    {
      "login": "daeyeon",
      "avatar": "https://avatars.githubusercontent.com/u/6630703?v=4",
      "url": "https://github.com/daeyeon"
@@ -1040,7 +1030,7 @@
    "contributors": [
     {
      "login": "GitLab Renovate Bot",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1794717977",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1794721577",
      "url": "https://gitlab.com/gitlab-bot"
     },
     {
@@ -1060,7 +1050,7 @@
     },
     {
      "login": "Stan Hu",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1794712159",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1794719357",
      "url": "https://gitlab.com/stanhu"
     },
     {
@@ -1230,7 +1220,7 @@
     },
     {
      "login": "Kam Kyrala",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19859972/avatar.png?v=1794715844",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19859972/avatar.png?v=1794720379",
      "url": "https://gitlab.com/kkyrala"
     },
     {
@@ -1255,7 +1245,7 @@
     },
     {
      "login": "Andrew Dunn",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/28633741/avatar.png?v=1794716454",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/28633741/avatar.png?v=1794720056",
      "url": "https://gitlab.com/andunn"
     },
     {
