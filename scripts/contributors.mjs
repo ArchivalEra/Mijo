@@ -57,8 +57,10 @@ async function j(url, headers = {}, attempt = 1) {
  * GitHub：总数取 `per_page=1&anon=true` 的 Link 头 rel="last" 页码。
  * 每页一条时「页码数 == 条数」，实测 open-design 逐页累计 451 ==
  * Link 页码 451；node 是 4554（逐页数 40 页都不够，会打爆速率）。
- * 这样 2 个请求搞定，且是 anon=true 口径（含匿名贡献者，可复跑）。
- * people 单独取前 maxPeople 个（贡献降序）。
+ * 这样 2 个请求搞定，且是 anon=true 口径（总数含匿名贡献者，可复跑）。
+ * people 只收具名贡献者（type !== "Anonymous"）：匿名者没绑 GitHub 账号，
+ * 没有头像也没有主页，展示出来只是一枚不可点的首字母 —— 用户裁定排除
+ *（2026-11-15）：人家本来就不想被看到。
  * @param {{owner:string,repo:string}} ref
  * @param {number} maxPeople
  * @param {string} [token]
@@ -69,20 +71,23 @@ async function github(ref, maxPeople, token) {
   const auth = token ? { Authorization: `Bearer ${token}` } : {};
   const base = `https://api.github.com/repos/${owner}/${repo}/contributors`;
 
-  // 总数：只读响应头，不下载 body
+  // 总数：只读响应头，不下载 body（anon=true 才是真实总人数口径）
   const probe = await j(`${base}?per_page=1&anon=true&page=1`, auth);
   if (!probe.ok) return null;          // 速率限制/网络错误：不谎报半截数据
   const total = lastPage(probe.headers);
 
-  // 头像：前 maxPeople 个（最多 100，一页搞定）
+  // 头像：前 maxPeople 个（最多 100，一页搞定），匿名条目剔除
   const list = await j(`${base}?per_page=${Math.min(maxPeople, PAGE_SIZE)}&anon=true`, auth);
   if (!list.ok || !Array.isArray(list.data)) return total ? { total, people: [] } : null;
   /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
-  const people = list.data.slice(0, maxPeople).map((/** @type {any} */ c) => ({
-    login: c.login ?? null,
-    avatar: c.avatar_url ?? null,
-    url: c.html_url ?? null,
-  }));
+  const people = list.data
+    .filter((/** @type {any} */ c) => c.type !== 'Anonymous')
+    .slice(0, maxPeople)
+    .map((/** @type {any} */ c) => ({
+      login: c.login ?? null,
+      avatar: c.avatar_url ?? null,
+      url: c.html_url ?? null,
+    }));
   return { total, people };
 }
 
