@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-15T06:20:56.374Z",
+ "generatedAt": "2026-11-15T12:35:45.416Z",
  "entries": [
   {
    "name": "mindspore",
@@ -518,7 +518,7 @@
   {
    "name": "node",
    "maintainer": "nodejs",
-   "lastCommit": "2026-11-15T04:48:02Z",
+   "lastCommit": "2026-11-15T11:52:26Z",
    "license": "NOASSERTION",
    "description": "Node.js JavaScript runtime ✨🐢🚀✨",
    "avatar": "https://avatars.githubusercontent.com/u/9950313?v=4",
@@ -1030,7 +1030,7 @@
    "contributors": [
     {
      "login": "GitLab Renovate Bot",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1794721577",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1794743184",
      "url": "https://gitlab.com/gitlab-bot"
     },
     {
@@ -1050,7 +1050,7 @@
     },
     {
      "login": "Stan Hu",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1794719357",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1794742445",
      "url": "https://gitlab.com/stanhu"
     },
     {
@@ -1220,7 +1220,7 @@
     },
     {
      "login": "Kam Kyrala",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19859972/avatar.png?v=1794720379",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19859972/avatar.png?v=1794744334",
      "url": "https://gitlab.com/kkyrala"
     },
     {
@@ -1245,7 +1245,7 @@
     },
     {
      "login": "Andrew Dunn",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/28633741/avatar.png?v=1794720056",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/28633741/avatar.png?v=1794723656",
      "url": "https://gitlab.com/andunn"
     },
     {
@@ -1315,12 +1315,12 @@
     },
     {
      "login": "Toon Claes",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/660180/avatar.png?v=1794701439",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/660180/avatar.png?v=1794728927",
      "url": "https://gitlab.com/toon"
     },
     {
      "login": "Maria Jose Salmeron Ibáñez",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/20946219/avatar.png?v=1794717500",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/20946219/avatar.png?v=1794740286",
      "url": "https://gitlab.com/mjsibanez"
     },
     {
