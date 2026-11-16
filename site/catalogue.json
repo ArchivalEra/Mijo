@@ -1,11 +1,11 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-16T12:48:35.277Z",
+ "generatedAt": "2026-11-16T13:58:24.962Z",
  "entries": [
   {
    "name": "mindspore",
    "maintainer": "姚小白",
-   "lastCommit": "2026-11-16T09:29:01+08:00",
+   "lastCommit": "2026-11-16T21:08:29+08:00",
    "license": "Apache-2.0",
    "description": "MindSpore is a new open source deep learning training/inference framework that could be used for mobile, edge and cloud scenarios.",
    "avatar": "https://cdn-img.gitcode.com/ed/df/3edd27f1cfdd7128e8957c66be1ce5ad16651ea354997826bcda24153e2c450e.png?time=1757643044512",
@@ -93,14 +93,14 @@
      "url": "https://atomgit.com/hwjiaorui"
     },
     {
-     "login": "lijiajie1234",
-     "avatar": "https://cdn-img.gitcode.com/de/ab/de057ab2fc03b29957e94d55a1f3e04d090c870a6ed4f7cab9e34946f7eb7e6f.jpg",
-     "url": "https://atomgit.com/lijiajie1234"
-    },
-    {
      "login": "Margaret_wangrui",
      "avatar": "https://cdn-img.gitcode.com/df/ea/d077fe43a92e43ed58c1048270687db7d2376f7f01f82fdaa20176a47164f019.png",
      "url": "https://atomgit.com/Margaret_wangrui"
+    },
+    {
+     "login": "lijiajie1234",
+     "avatar": "https://cdn-img.gitcode.com/de/ab/de057ab2fc03b29957e94d55a1f3e04d090c870a6ed4f7cab9e34946f7eb7e6f.jpg",
+     "url": "https://atomgit.com/lijiajie1234"
     },
     {
      "login": "yt_289",
@@ -1030,7 +1030,7 @@
    "contributors": [
     {
      "login": "GitLab Renovate Bot",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1794829601",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1794836801",
      "url": "https://gitlab.com/gitlab-bot"
     },
     {
@@ -1045,7 +1045,7 @@
     },
     {
      "login": "Stan Hu",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1794829457",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1794836658",
      "url": "https://gitlab.com/stanhu"
     },
     {
@@ -1075,7 +1075,7 @@
     },
     {
      "login": "Roshni Sarangadharan",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/21979359/avatar.png?v=1794830493",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/21979359/avatar.png?v=1794834499",
      "url": "https://gitlab.com/rsarangadharan"
     },
     {
@@ -1220,7 +1220,7 @@
     },
     {
      "login": "Kam Kyrala",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19859972/avatar.png?v=1794832671",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19859972/avatar.png?v=1794836722",
      "url": "https://gitlab.com/kkyrala"
     },
     {
