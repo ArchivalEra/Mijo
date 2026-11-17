@@ -170,7 +170,10 @@ async function gitee(ref, maxPeople, token) {
     // 查得到账号才给链接；两个「字母哥」查不到就没有 url —— 符合预期
     people.push({ login: name, avatar, url: profile });
   }
-  return { total: null, people };
+  // 总数：Gitee 的 contributors 端点**忽略分页参数**（实测 page=1 与 page=2
+  // 返回同一批 1441 条全量数据），所以 r.data 就是全部贡献者 —— 长度即精确总数。
+  // 此前报 null 是因为假设「只拿到一页」，而实际上从来就不是分页的。
+  return { total: r.data.length, people };
 }
 
 /** Bitbucket：无 contributors 端点，聚合最近 commits 的作者（近似，不谎报总数）。
@@ -243,9 +246,10 @@ async function gitcode(ref, maxPeople) {
     people.push({ login: name, avatar, url });
   }
 
-  // 总数：ag-cli 的分页头拿不到 x-total，用「第一页满 100 ⇒ 至少 100」的诚实口径：
-  // 拿满一页就报 null（不谎报精确数），页面只显示「有这么多头像」。
-  return { total: null, people };
+  // 总数：GitCode 的 v5 API **忽略 per_page**（实测 per_page=1 与 =100 返回同一批
+  // 全量数据），所以这次请求拿到的就是全部贡献者 —— `list.length` 是精确总数，
+  // 不再是「至少这么多」。
+  return { total: list.length, people };
 }
 
 /**

@@ -35,8 +35,21 @@ async function main() {
       const tr = document.createElement('tr');
       const date = e.lastCommit ? new Date(e.lastCommit).toISOString().slice(0, 10) : '—';
 
+      // 仓库名后面跟来源域名：同名仓库在不同平台上（两个 mindspore：GitCode 与
+      // Gitee）仅看名字无法区分，而链接文字是仓名不是域名。域名是唯一能一眼分辨
+      // 的平台事实，且不额外请求数据。
+      let host = '';
+      try {
+        host = new URL(e.url).hostname.replace(/^www\./, '');
+      } catch {
+        host = '';
+      }
+      const hostTag = host
+        ? `<span class="repo-host">${esc(host)}</span>`
+        : '';
+
       tr.innerHTML =
-        `<td><a class="repo" href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.name)}</a></td>` +
+        `<td><a class="repo" href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.name)}</a>${hostTag}</td>` +
         `<td></td>` +
         `<td></td>` +
         `<td class="desc">${esc(e.description ?? '—')}</td>` +

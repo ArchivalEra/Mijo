@@ -120,11 +120,34 @@ const LAST_COMMIT = {
 // ── license（仓库对象缺字段时的兜底：读 LICENSE 文件首行判定） ───────────────
 /** @type {Record<string, (ref: RepoRef) => Promise<string|null>>} */
 const LICENSE_PROBE = {
+  /** @param {{owner:string,repo:string}} ref @param {string} [token] */
+  async github(ref, token) { return probeGithubLicense(ref.owner, ref.repo, token); },
   /** @param {{owner:string,repo:string}} ref */
   async gitlab(ref) { return probeGitlabLicense(ref.owner, ref.repo); },
   /** @param {{owner:string,repo:string}} ref */
   async bitbucket(ref) { return probeBitbucketLicense(ref.owner, ref.repo); },
 };
+
+/**
+ * GitHub：仓库对象报 NOASSERTION 时，读 LICENSE 正文识别 SPDX。
+ * 用 Contents API（raw media type），避免 HTML 页面里夹带渲染内容。
+ * @param {string} owner @param {string} repo @param {string} [token]
+ */
+async function probeGithubLicense(owner, repo, token) {
+  /** @type {Record<string,string>} */
+  const h = { Accept: 'application/vnd.github.raw' };
+  if (token) h.Authorization = `Bearer ${token}`;
+  for (const file of ['LICENSE', 'LICENSE.md', 'LICENSE.txt', 'COPYING', 'COPYING.md']) {
+    try {
+      const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${file}`, {
+        headers: { ...UA, ...h },
+      });
+      if (!r.ok) continue;
+      return identifyLicense(await r.text());
+    } catch { /* 继续 */ }
+  }
+  return null;
+}
 
 /** @param {string} owner @param {string} repo */
 async function probeGitlabLicense(owner, repo) {
@@ -207,13 +230,20 @@ export async function enrich(entry, ref, { tokens = {} } = {}) {
     } catch { /* 拿不到就留空；原因由调用方按 PLATFORM_LIMITS 装配 */ }
   }
 
+  // GitHub 用 NOASSERTION 表示「有 LICENSE 文件但识别不出 SPDX」——它是
+  // 一个「未知」标记而不是 license 名。直接展示对读者没有意义，按缺失处理：
+  // 先当空，再走下面的 LICENSE 正文探测；探测也认不出就如实留空（带 reason）。
+  if (typeof out.license === 'string' && /^NOASSERTION$/i.test(out.license.trim())) {
+    out.license = null;
+  }
+
   if (!out.license) {
-    /** @type {(ref: RepoRef) => Promise<string|null>} */
-    const probe = /** @type {(ref: RepoRef) => Promise<string|null>} */ (
+    /** @type {(ref: RepoRef, token?: string) => Promise<string|null>} */
+    const probe = /** @type {(ref: RepoRef, token?: string) => Promise<string|null>} */ (
       /** @type {Record<string, any>} */ (LICENSE_PROBE)[platform]);
     if (probe) {
       try {
-        out.license = await probe({ owner: ref.owner, repo: ref.repo }) ?? null;
+        out.license = await probe({ owner: ref.owner, repo: ref.repo }, tokens[platform]) ?? null;
       } catch { /* 留空 */ }
     }
   }
