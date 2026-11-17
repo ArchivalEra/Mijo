@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-16T13:58:24.962Z",
+ "generatedAt": "2026-11-17T03:02:48.149Z",
  "entries": [
   {
    "name": "mindspore",
@@ -513,12 +513,15 @@
      "url": "https://atomgit.com/horcham_zhq"
     }
    ],
-   "contributorTotal": null
+   "contributorTotal": null,
+   "reasons": {
+    "contributorTotal": "platform-omits-contributor-total"
+   }
   },
   {
    "name": "node",
    "maintainer": "nodejs",
-   "lastCommit": "2026-11-16T11:17:50Z",
+   "lastCommit": "2026-11-17T00:59:15Z",
    "license": "NOASSERTION",
    "description": "Node.js JavaScript runtime ✨🐢🚀✨",
    "avatar": "https://avatars.githubusercontent.com/u/9950313?v=4",
@@ -881,14 +884,14 @@
      "url": "https://github.com/lundibundi"
     },
     {
-     "login": "ryzokuken",
-     "avatar": "https://avatars.githubusercontent.com/u/13121330?v=4",
-     "url": "https://github.com/ryzokuken"
-    },
-    {
      "login": "pimterry",
      "avatar": "https://avatars.githubusercontent.com/u/1526883?v=4",
      "url": "https://github.com/pimterry"
+    },
+    {
+     "login": "ryzokuken",
+     "avatar": "https://avatars.githubusercontent.com/u/13121330?v=4",
+     "url": "https://github.com/ryzokuken"
     },
     {
      "login": "zcbenz",
@@ -1016,12 +1019,13 @@
      "url": "https://github.com/dnlup"
     }
    ],
-   "contributorTotal": 4559
+   "contributorTotal": 4559,
+   "reasons": {}
   },
   {
    "name": "gitlab-runner",
    "maintainer": "GitLab.org",
-   "lastCommit": "2026-11-16T18:09:13.000+05:30",
+   "lastCommit": "2026-11-16T21:55:07.000+05:30",
    "license": "MIT",
    "description": "GitLab Runner is the open source project that is used to run your CI/CD jobs and send the results back to GitLab",
    "avatar": "https://gitlab.com/uploads/-/system/group/avatar/9970/project_avatar.png?v=1750616408",
@@ -1030,12 +1034,12 @@
    "contributors": [
     {
      "login": "GitLab Renovate Bot",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1794836801",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1794883606",
      "url": "https://gitlab.com/gitlab-bot"
     },
     {
      "login": "Axel von Bertoldi",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/11925179/avatar.png?v=1794240434",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/11925179/avatar.png?v=1794845449",
      "url": "https://gitlab.com/avonbertoldi"
     },
     {
@@ -1045,7 +1049,7 @@
     },
     {
      "login": "Stan Hu",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1794836658",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1794881641",
      "url": "https://gitlab.com/stanhu"
     },
     {
@@ -1059,14 +1063,14 @@
      "url": null
     },
     {
-     "login": "Igor",
-     "avatar": null,
-     "url": null
-    },
-    {
      "login": "Lachlan Grant",
      "avatar": "https://secure.gravatar.com/avatar/f9cc947a417b2f4332693c15ed729edf7aa44a7687e02e85935939e80946589b?s=80&d=identicon",
      "url": "https://gitlab.com/lgrant"
+    },
+    {
+     "login": "Igor",
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Daniel Keenan",
@@ -1075,7 +1079,7 @@
     },
     {
      "login": "Roshni Sarangadharan",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/21979359/avatar.png?v=1794834499",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/21979359/avatar.png?v=1794875185",
      "url": "https://gitlab.com/rsarangadharan"
     },
     {
@@ -1100,7 +1104,7 @@
     },
     {
      "login": "Romuald Atchadé",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/8111826/avatar.png?v=1794787232",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/8111826/avatar.png?v=1794880018",
      "url": "https://gitlab.com/ratchade"
     },
     {
@@ -1115,7 +1119,7 @@
     },
     {
      "login": "Vishal Tak",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/10764887/avatar.png?v=1794832472",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/10764887/avatar.png?v=1794873753",
      "url": "https://gitlab.com/vtak"
     },
     {
@@ -1130,7 +1134,7 @@
     },
     {
      "login": "Evan Read",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/2683848/avatar.png?v=1794826441",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/2683848/avatar.png?v=1794882537",
      "url": "https://gitlab.com/eread"
     },
     {
@@ -1220,7 +1224,7 @@
     },
     {
      "login": "Kam Kyrala",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19859972/avatar.png?v=1794836722",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19859972/avatar.png?v=1794873649",
      "url": "https://gitlab.com/kkyrala"
     },
     {
@@ -1235,7 +1239,7 @@
     },
     {
      "login": "Davis Bickford",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/12695721/avatar.png?v=1794787201",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/12695721/avatar.png?v=1794873656",
      "url": "https://gitlab.com/dbickford"
     },
     {
@@ -1245,7 +1249,7 @@
     },
     {
      "login": "Andrew Dunn",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/28633741/avatar.png?v=1794830934",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/28633741/avatar.png?v=1794880667",
      "url": "https://gitlab.com/andunn"
     },
     {
@@ -1260,7 +1264,7 @@
     },
     {
      "login": "Ben Bodenmiller",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/5332/avatar.png?v=1794520716",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/5332/avatar.png?v=1794861131",
      "url": "https://gitlab.com/bbodenmiller"
     },
     {
@@ -1295,7 +1299,7 @@
     },
     {
      "login": "Kevin Lew",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19662303/avatar.png?v=1794787258",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19662303/avatar.png?v=1794873626",
      "url": "https://gitlab.com/klew-ext"
     },
     {
@@ -1315,12 +1319,12 @@
     },
     {
      "login": "Toon Claes",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/660180/avatar.png?v=1794825154",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/660180/avatar.png?v=1794873848",
      "url": "https://gitlab.com/toon"
     },
     {
      "login": "Maria Jose Salmeron Ibáñez",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/20946219/avatar.png?v=1794830346",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/20946219/avatar.png?v=1794883118",
      "url": "https://gitlab.com/mjsibanez"
     },
     {
@@ -1529,7 +1533,8 @@
      "url": null
     }
    ],
-   "contributorTotal": 248
+   "contributorTotal": 248,
+   "reasons": {}
   },
   {
    "name": "atlassian-plugins",
@@ -1682,7 +1687,11 @@
      "url": "https://bitbucket.org/%7B2c58fd4f-96a5-40e8-af41-22da206e5c6c%7D/"
     }
    ],
-   "contributorTotal": 28
+   "contributorTotal": 28,
+   "reasons": {
+    "license": "platform-omits-license",
+    "description": "repository-has-no-description"
+   }
   },
   {
    "name": "mindspore",
@@ -1991,38 +2000,38 @@
     },
     {
      "login": "jjfeing",
-     "avatar": null,
-     "url": null
+     "avatar": "https://foruda.gitee.com/avatar/1677072201833701798/6574854_jjfeing_1584438580.png",
+     "url": "https://gitee.com/jjfeing"
     },
     {
      "login": "zhaozhenlong",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/zhaozhenlong"
     },
     {
      "login": "linqingke",
-     "avatar": null,
-     "url": null
+     "avatar": "https://foruda.gitee.com/avatar/1677072216427736268/6575151_linqingke_1584444037.png",
+     "url": "https://gitee.com/linqingke"
     },
     {
      "login": "zhengzuohe",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/zhengzuohe"
     },
     {
      "login": "yide12",
-     "avatar": null,
-     "url": null
+     "avatar": "https://foruda.gitee.com/avatar/1758873283789715764/11216514_yide12_1758873283.png",
+     "url": "https://gitee.com/yide12"
     },
     {
      "login": "qiuzhongya",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/qiuzhongya"
     },
     {
      "login": "hedongdong",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/hedongdong"
     },
     {
      "login": "liangcanli",
@@ -2031,28 +2040,28 @@
     },
     {
      "login": "fandawei",
-     "avatar": null,
-     "url": null
+     "avatar": "https://foruda.gitee.com/avatar/1677060286616794906/5593875_fandawei_1578988945.png",
+     "url": "https://gitee.com/fandawei"
     },
     {
      "login": "reku1997",
-     "avatar": null,
-     "url": null
+     "avatar": "https://foruda.gitee.com/avatar/1677089600350218391/7662714_reku1997_1638970421.png",
+     "url": "https://gitee.com/reku1997"
     },
     {
      "login": "huangxinjing",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/huangxinjing"
     },
     {
      "login": "xiefangqi",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/xiefangqi"
     },
     {
      "login": "LaiYongqiang",
-     "avatar": null,
-     "url": null
+     "avatar": "https://foruda.gitee.com/avatar/1677072348401343110/6578500_laiyongqiang_1626348270.png",
+     "url": "https://gitee.com/laiyongqiang"
     },
     {
      "login": "chang zherui",
@@ -2061,8 +2070,8 @@
     },
     {
      "login": "shanfeng",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/shanfeng"
     },
     {
      "login": "liuluobin",
@@ -2071,28 +2080,28 @@
     },
     {
      "login": "yangzhenzhang",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/yangzhenzhang"
     },
     {
      "login": "fanjibin",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/fanjibin"
     },
     {
      "login": "zong-shuai",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/zong-shuai"
     },
     {
      "login": "buxue",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/buxue"
     },
     {
      "login": "ckey_Dou",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/ckey_dou"
     },
     {
      "login": "huangchengnuo",
@@ -2101,18 +2110,18 @@
     },
     {
      "login": "liu-yongqi-63",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/liu-yongqi-63"
     },
     {
      "login": "jiaxueyu",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/jiaxueyu"
     },
     {
      "login": "tronzhang",
-     "avatar": null,
-     "url": null
+     "avatar": "https://foruda.gitee.com/avatar/1757476483038949475/6517937_tronzhang_1757476483.png",
+     "url": "https://gitee.com/tronzhang"
     },
     {
      "login": "He Wei",
@@ -2126,23 +2135,23 @@
     },
     {
      "login": "baihuawei",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/baihuawei"
     },
     {
      "login": "xiao_yao1994",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/xiao_yao1994"
     },
     {
      "login": "maning202007",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/maning202007"
     },
     {
      "login": "hejianheng001",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/hejianheng001"
     },
     {
      "login": "7347157+joylvliang@user.noreply.gitee.com",
@@ -2151,18 +2160,18 @@
     },
     {
      "login": "chenjianping",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/chenjianping"
     },
     {
      "login": "wangchangheng",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/wangchangheng"
     },
     {
      "login": "jianghui58",
-     "avatar": null,
-     "url": null
+     "avatar": "https://foruda.gitee.com/avatar/1677098868388287872/7862345_jianghui58_1595851639.png",
+     "url": "https://gitee.com/jianghui58"
     },
     {
      "login": "Cathy Wong",
@@ -2176,26 +2185,29 @@
     },
     {
      "login": "liuxiao93",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/liuxiao93"
     },
     {
      "login": "huoxinyou",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/huoxinyou"
     },
     {
      "login": "zhangyinxia",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/zhangyinxia"
     },
     {
      "login": "lzk",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/lzk"
     }
    ],
-   "contributorTotal": null
+   "contributorTotal": null,
+   "reasons": {
+    "contributorTotal": "platform-omits-contributor-total"
+   }
   },
   {
    "name": "showcase",
@@ -2205,7 +2217,12 @@
    "description": "CNB完整示例",
    "avatar": null,
    "profile": "https://cnb.cool/examples",
-   "url": "https://cnb.cool/examples/showcase"
+   "url": "https://cnb.cool/examples/showcase",
+   "reasons": {
+    "avatar": "platform-omits-owner-avatar",
+    "contributors": "repository-has-no-contributors"
+   }
   }
- ]
+ ],
+ "rejected": []
 }
