@@ -11,6 +11,31 @@
 const UA = { 'User-Agent': 'mijo-catalogue/1' };
 
 /**
+ * 用 ag-cli 读 GitCode/AtomGit 的最后 commit 时间（走隔离 XDG，token 不落盘）。
+ * 与 generate-catalogue.mjs 的 viaAgCli 同一条通路，这里作为 enrich 的
+ * 兜底：平台对象没给时间时再问一次 commits 端点。
+ *
+ * @param {{owner:string,repo:string}} ref
+ * @returns {Promise<string|null>}
+ */
+async function commitDateViaAgCli(ref) {
+  const { execFile } = await import('node:child_process');
+  const { promisify } = await import('node:util');
+  const run = promisify(execFile);
+  const binary = process.env.AGCLI_TOKEN
+    ? new URL('./ag.sh', import.meta.url).pathname
+    : 'ag-cli';
+  const { stdout } = await run(
+    binary,
+    ['commit', 'list', `${ref.owner}/${ref.repo}`, '--limit', '1', '--json', '--raw-output'],
+    { maxBuffer: 8 << 20 },
+  );
+  const commits = JSON.parse(stdout);
+  const first = Array.isArray(commits) ? commits[0] : null;
+  return first?.date ?? first?.committedDate ?? null;
+}
+
+/**
  * @param {string} url
  * @param {Record<string,string>} [headers]
  * @returns {Promise<any>}
@@ -57,6 +82,38 @@ const LAST_COMMIT = {
     const { owner, repo } = ref;
     const d = await j(`https://api.bitbucket.org/2.0/repositories/${owner}/${repo}/commits?pagelen=1`);
     return d?.values?.[0]?.date ?? null;
+  },
+  /**
+   * GitCode / AtomGit：走 ag-cli 的 commit list（与 viaAgCli 同一条通路，
+   * 但这里作为 enrich 的兜底，用于平台对象没给时间的情形）。
+   * @param {{owner:string,repo:string}} ref
+   */
+  async gitcode(ref) {
+    return commitDateViaAgCli(ref);
+  },
+  /** @param {{owner:string,repo:string}} ref */
+  async atomgit(ref) {
+    return commitDateViaAgCli(ref);
+  },
+  /**
+   * CNB：SDK 的 commits.list（需要令牌；无令牌时抛错，由调用方记 reason）。
+   * @param {{owner:string,repo:string}} ref
+   * @param {string} [token]
+   */
+  async cnb(ref, token) {
+    if (!token) throw new Error('CNB 需要访问令牌才能读 commits');
+    const { CnbClient } = await import('@xindiwo/git-sdk');
+    const client = new CnbClient({ token });
+    const page = await client.commits.list({
+      owner: ref.owner,
+      repo: ref.repo,
+      perPage: 1,
+    });
+    /** SDK 的类型声明在 items 上；运行期若直接给数组也兼容。 */
+    const items = /** @type {{items?: {committedAt?: string}[]}} */ (page)?.items
+      ?? /** @type {{committedAt?: string}[]} */ (/** @type {unknown} */ (page));
+    const first = Array.isArray(items) ? items[0] : null;
+    return first?.committedAt ?? null;
   },
 };
 
@@ -139,12 +196,15 @@ export async function enrich(entry, ref, { tokens = {} } = {}) {
   const platform = ref.platform;
   const out = { ...entry };
 
+  // lastCommit：只接受真提交时间。取不到就保持 null，由 completeness 判据
+  // 配合 reasons 决定是 degraded 还是 broken——绝不拿 pushedAt 顶替。
   const lc = /** @type {(ref: RepoRef, token?: string) => Promise<string|null>} */ (
     /** @type {Record<string, any>} */ (LAST_COMMIT)[platform]);
   if (lc && ref.owner && ref.repo) {
     try {
-      out.lastCommit = await lc({ owner: ref.owner, repo: ref.repo }, tokens[platform]) ?? out.lastCommit;
-    } catch { /* 保留原值 */ }
+      const real = await lc({ owner: ref.owner, repo: ref.repo }, tokens[platform]);
+      if (real) out.lastCommit = real;
+    } catch { /* 拿不到就留空；原因由调用方按 PLATFORM_LIMITS 装配 */ }
   }
 
   if (!out.license) {

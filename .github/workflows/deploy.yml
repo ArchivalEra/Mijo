@@ -35,6 +35,9 @@ jobs:
           npm install -g @hust-open-atom-club/atomgit-cli@0.7.4 --ignore-scripts --no-audit --no-fund
 
       - name: Derive catalogue
+        # 这一步就是部署闸门：派生在数据不全时退出非零（缺令牌/限流/网络失败/
+        # 裸 null 字段），job 立刻失败，下面的 commit 与 dispatch 都不会执行，
+        # 线上继续跑上一版。判据见 scripts/completeness.mjs。
         env:
           AGCLI_TOKEN: ${{ secrets.MJ_GITCODE_TOKEN }}
           MJ_GITCODE_TOKEN: ${{ secrets.MJ_GITCODE_TOKEN }}

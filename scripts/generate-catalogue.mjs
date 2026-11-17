@@ -12,9 +12,29 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { createGitSdk } from '@xindiwo/git-sdk';
 import { enrich } from './enrich.mjs';
 import { contributors } from './contributors.mjs';
+import {
+  assessCompleteness,
+  summarize,
+  PLATFORM_LIMITS,
+} from './completeness.mjs';
+
+// 本地凭据：仓根的 .env（不入库，模板见 .env.example）。
+// 用 Node 内置的 loadEnvFile，零依赖；文件不存在时静默跳过——CI 里
+// 变量由 Secrets 注入，本来就没有这个文件。已存在的环境变量优先，
+// loadEnvFile 不会覆盖它们，所以 CI 的行为不受影响。
+const ENV_FILE = fileURLToPath(new URL('../.env', import.meta.url));
+if (existsSync(ENV_FILE)) {
+  try {
+    process.loadEnvFile(ENV_FILE);
+  } catch (/** @type {any} */ e) {
+    console.error(`警告：读不了 ${ENV_FILE}（${e?.message ?? e}）——按环境变量继续`);
+  }
+}
 
 const run = promisify(execFile);
 const OUT = new URL('../site/catalogue.json', import.meta.url).pathname;
@@ -82,7 +102,8 @@ async function viaAgCli(ref) {
     const commits = await agJson(['commit', 'list', target, '--limit', '1', '--json', '--raw-output']);
     lastCommit = commits?.[0]?.date ?? null;
   } catch {
-    // 空仓库没有 commit：不是错误，字段留空。
+    // 空仓库没有 commit，或该端点读不到：留给 enrich 再试一次，
+    // 仍拿到 null 就由 completeness 判据按 reason 处理。
   }
   return {
     name: repo.name,
@@ -124,13 +145,26 @@ async function main() {
   const { tokens, status } = sdkTokens();
   const sdk = createGitSdk(tokens);
   const entries = [];
-  const skipped = [];
+  /** @type {{url:string, reason:string}[]} */
+  const rejected = [];
+  /** 解析阶段就被丢掉的行（不支持的 host、写坏的行）——它们也必须有下落。 */
+  const unparsed = raw.split('\n').map(s => s.trim())
+    .filter(s => s && !s.startsWith('#'))
+    .map(line => ({ line, ref: parseUrl(line) }))
+    .filter(({ ref }) => ref === null || ref.platform === null);
 
   console.log('ag-cli auth:', process.env.AGCLI_TOKEN ? 'AGCLI_TOKEN (isolated XDG)' : 'local login');
   console.log('sdk token source:', JSON.stringify(status));
 
+  for (const { line, ref } of unparsed) {
+    // 解析失败不进 entries，但必须留下拒绝记录，否则这条 URL 就凭空消失了。
+    rejected.push({
+      url: line,
+      reason: ref === null ? '不是可解析的仓库地址' : `不支持的平台：${line}`,
+    });
+  }
+
   for (const ref of refs) {
-    if (!ref.platform) { skipped.push(`${ref.url}: unsupported host`); continue; }
     try {
       if (AG_PLATFORMS.has(ref.platform)) {
         entries.push(await viaAgCli(ref));
@@ -147,7 +181,10 @@ async function main() {
         entries.push({
           name: r.name,
           maintainer: ow.username ?? ow.login ?? ref.owner,
-          lastCommit: r.pushedAt ?? r.updatedAt ?? null,
+          // 不再用 pushedAt/updatedAt 顶替：那不是最后提交时间，页面上的
+          // 日期无法分辨真假。拿不到就留空 + 由 enrich 补真值，补不到
+          // 就带 reason（见下方 reasons 装配）。
+          lastCommit: null,
           license: r.license ?? null,
           description: r.description || null,
           avatar,
@@ -163,28 +200,77 @@ async function main() {
         maxPeople: 100,
         token: tokens[ref.platform],
       }).catch(() => null);
-      entries[entries.length - 1] = contrib
+      const merged = contrib
         ? { ...withBase, contributors: contrib.people, contributorTotal: contrib.total }
         : withBase;
+
+      // 字段缺失必须带原因，否则判据无法区分「平台不提供」与「抓取失败」。
+      // 原因的来源只有两处：平台能力（PLATFORM_LIMITS）与仓库内容事实。
+      /** @type {Record<string,string>} */
+      const reasons = {};
+      if (!merged.lastCommit) {
+        reasons.lastCommit = PLATFORM_LIMITS.lastCommitAbsent;
+      }
+      if (!merged.license) {
+        reasons.license = PLATFORM_LIMITS.licenseAbsent;
+      }
+      if (!merged.description) {
+        reasons.description = PLATFORM_LIMITS.descriptionAbsent;
+      }
+      // 维护者的头像/主页来自各平台仓库对象里的 owner 结构，字段名各不相同；
+      // 平台没给就是没给（不是抓取失败），页面退首字母/无链接即可。
+      if (!merged.avatar) {
+        reasons.avatar = PLATFORM_LIMITS.ownerAvatarAbsent;
+      }
+      if (!merged.profile) {
+        reasons.profile = PLATFORM_LIMITS.ownerProfileAbsent;
+      }
+      if (!merged.maintainer) {
+        reasons.maintainer = PLATFORM_LIMITS.ownerNameAbsent;
+      }
+      if (!contrib) {
+        reasons.contributors = PLATFORM_LIMITS.noContributors;
+      } else if (merged.contributorTotal === null) {
+        reasons.contributorTotal = PLATFORM_LIMITS.contributorTotalAbsent;
+      }
+      entries[entries.length - 1] = { ...merged, reasons };
     } catch (/** @type {any} */ e) {
-      // 读不到 ≠ 坏了：私有 / 无权限 / 已删除都记原因后跳过，不产空壳条目。
+      // 读不到 ≠ 坏了：私有 / 无权限 / 已删除都记原因后拒绝，不产空壳条目。
       const msg = String(e?.stderr || e?.message || '').trim().split('\n').pop();
-      skipped.push(`${ref.url}: ${msg}`);
+      rejected.push({ url: ref.url, reason: msg || '读取失败' });
     }
   }
 
-  // 取不到的条目静默忽略：原因只打在 CI 日志里，不进 catalogue。
-  // 对外页面不展示任何错误状态 —— 目录只呈现可用条目。
   const catalogue = {
     schema: 1,
     generatedAt: new Date().toISOString(),
     entries,
+    // 拒绝记录随 catalogue 一起落盘：这是「为什么某条 URL 没进目录」的
+    // 持久凭据。此前这些原因只打在 CI 日志里，日志一过期就再也查不到
+    // （open-design、git-sdk-v1 两条就是这么消失得无影无踪的）。
+    rejected,
   };
   await mkdir(new URL('../site/', import.meta.url), { recursive: true });
   await writeFile(OUT, JSON.stringify(catalogue, null, 1) + '\n');
 
-  console.log(`catalogue: ${entries.length} entries, ${skipped.length} skipped`);
-  for (const s of skipped) console.log('  skip:', s);
+  console.log(`catalogue: ${entries.length} entries, ${rejected.length} rejected`);
+  for (const r of rejected) console.log('  rejected:', r.url, '—', r.reason);
+
+  // ── 裁决：能不能部署 ────────────────────────────────────────────────
+  // 先写文件再判：坏数据不进线上（CI 红、dispatch 不触发），但工作区里
+  // 有完整产物供人排查。反过来（先 exit 再写）会让人只剩一行日志可看。
+  const verdict = assessCompleteness({
+    refs: [...refs, ...unparsed.map(({ line }) => ({ url: line, platform: null, owner: '', repo: '' }))],
+    entries,
+    rejected,
+    configuredPlatforms: new Set(Object.keys(tokens)),
+  });
+  console.error(summarize(verdict));
+
+  if (verdict.status === 'broken') {
+    console.error(`\n派生产出不合格：${verdict.failures.length} 项阻塞。catalogue 已写入供排查，但不部署。`);
+    process.exitCode = 1;
+  }
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

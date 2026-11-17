@@ -61,7 +61,11 @@ jobs:
           done
           record 'shellcheck-workflows' 'shellcheck run blocks of this workflow' "$sc_fail"
 
-          # 派生一遍 catalogue，确认数据通路没断（不入库，只验通）
+          # 判据自己的测试：证明它会在该红的时候红。
+          record 'completeness-tests' 'node --test tests/' "$(node --test tests/ >/dev/null 2>&1; echo $?)"
+
+          # 派生一遍 catalogue：现在它会因数据不全而退出非零，
+          # 所以这一项同时是「数据通路没断」与「完整性达标」的判据。
           record 'derive-catalogue' 'node scripts/generate-catalogue.mjs' "$(node scripts/generate-catalogue.mjs >/dev/null 2>&1; echo $?)"
 
           cat results.tsv

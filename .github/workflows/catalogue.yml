@@ -34,9 +34,16 @@ jobs:
         # AtomGit/GitCode 官方 CLI；npm 全局装在 runner 上，不落 token
         run: npm install -g @hust-open-atom-club/atomgit-cli@0.7.4 --ignore-scripts --no-audit --no-fund
 
+      - name: Check the completeness rule
+        # 判据自己的测试：先证明它会在该红的时候红，再拿它去判数据。
+        run: node --test tests/
+
       - name: Derive catalogue
-        # token 只进本步骤进程环境；缺哪个平台就跳过哪个平台的 URL，
-        # 生成器把原因写进 catalogue 的 note，不产空壳条目。
+        # token 只进本步骤进程环境，不落盘、不写进 catalogue。
+        # 缺令牌 / 限流 / 网络失败会让派生**退出非零**（CI 红、不部署），
+        # 并把原因逐条打印出来；可接受的缺失（私有、平台不提供）记进
+        # catalogue 的 rejected[] 与 entry.reasons，页面照常渲染。
+        # 判据在 scripts/completeness.mjs，本地跑 node --test tests/ 可验。
         env:
           AGCLI_TOKEN: ${{ secrets.MJ_GITCODE_TOKEN }}
           MJ_GITCODE_TOKEN: ${{ secrets.MJ_GITCODE_TOKEN }}
