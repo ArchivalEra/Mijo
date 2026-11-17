@@ -141,12 +141,18 @@ async function gitlab(ref, maxPeople) {
  * 但 contributors 的 `name` 常常就是 Gitee username（sunfei、sunjiakun），
  * 查公开的 /users/{name} 可拿到真实头像 + 人物主页；查不到就退首字母。
  * email 只在这里读一次用于判空，绝不外泄。
- * @param {{owner:string,repo:string}} ref @param {number} maxPeople
+ * @param {{owner:string,repo:string}} ref @param {number} maxPeople @param {string} [token]
  */
-async function gitee(ref, maxPeople) {
-  const url = `https://gitee.com/api/v5/repos/${ref.owner}/${ref.repo}/contributors?per_page=${Math.min(maxPeople, PAGE_SIZE)}`;
+async function gitee(ref, maxPeople, token) {
+  // contributors 端点已有 `?per_page=`，追加用 `&`；users 端点没有其他参数，
+  // 必须从 `?` 起 —— 拼错会变成 `/users/name&access_token=...`（实测被解析
+  // 成用户名的一部分，返回空，头像于是静默全空）。
+  const qs = token ? `access_token=${encodeURIComponent(token)}` : '';
+  const url = `https://gitee.com/api/v5/repos/${ref.owner}/${ref.repo}/contributors?per_page=${Math.min(maxPeople, PAGE_SIZE)}${qs ? `&${qs}` : ''}`;
   const r = await j(url);
-  if (!r.ok || !Array.isArray(r.data)) return null;
+  if (!r.ok || !Array.isArray(r.data)) {
+    throw new Error(`gitee contributors HTTP ${r.status}${token ? '' : '（未提供 MJ_GITEE_TOKEN）'}`);
+  }
 
   /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
   const people = [];
@@ -155,7 +161,9 @@ async function gitee(ref, maxPeople) {
     let avatar = null, profile = null;
     if (i > 0 && i % 10 === 0) await new Promise(res => setTimeout(res, 120));
     if (name && /^[A-Za-z0-9_.-]+$/.test(name)) {
-      const u = await j(`https://gitee.com/api/v5/users/${encodeURIComponent(name)}`);
+      const u = await j(
+        `https://gitee.com/api/v5/users/${encodeURIComponent(name)}${qs ? `?${qs}` : ''}`,
+      );
       const hit = u.data && !u.data.message ? u.data : null;
       if (hit) { avatar = hit.avatar_url || null; profile = hit.html_url || null; }
     }

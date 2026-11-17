@@ -176,7 +176,13 @@ export function assessCompleteness({ refs, entries, rejected = [], configuredPla
 
       const reason = entry?.reasons?.[field];
       if (typeof reason === 'string' && reason.trim() !== '') {
-        notes.push(`${label}: ${field} 缺失（${reason}）`);
+        // 带 `*-fetch-failed:` 前缀的原因说明「不是没有，是没抓到」——
+        // 与缺令牌、限流同类，属于配置/网络问题，必须阻塞。
+        if (/fetch-failed:/i.test(reason)) {
+          failures.push(`${label}: ${field} 抓取失败（${reason}）`);
+        } else {
+          notes.push(`${label}: ${field} 缺失（${reason}）`);
+        }
       } else {
         failures.push(`${label}: ${field} 为空且没有说明原因（裸 null 与抓取失败无法区分）`);
       }

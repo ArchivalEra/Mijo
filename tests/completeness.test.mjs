@@ -187,6 +187,23 @@ test('unrecognised host is reported, not silently dropped', () => {
   assert.match(v.failures[0], /无法识别的仓库地址/);
 });
 
+test('a field whose reason says "fetch failed" is blocking, not a degradation', () => {
+  // 「没抓到」与「本来就没有」必须分家：前者换个环境/稍后重跑就有。
+  const v = assessCompleteness({
+    refs: [ref('https://gitee.com/a/b', 'gitee')],
+    entries: [
+      entry({
+        url: 'https://gitee.com/a/b',
+        contributors: [],
+        reasons: { contributors: 'contributor-fetch-failed: gitee contributors HTTP 403' },
+      }),
+    ],
+    configuredPlatforms: ALL_TOKENS,
+  });
+  assert.equal(v.status, 'broken');
+  assert.match(v.failures[0], /抓取失败/);
+});
+
 test('summarize names the blocking count and the reason lines', () => {
   const text = summarize({
     status: 'broken',

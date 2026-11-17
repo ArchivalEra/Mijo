@@ -196,10 +196,17 @@ async function main() {
       // contributors 只取前 5 + 总数；拿不到就留空（页面不渲那一堆）
       // 数据模块自己管分页/限流/隐私；这里只要结果。
       // 平铺 5 个 + 框内换页，共取 100 个头像（4 页 × 25）。
+      // 贡献者抓取失败不能静默变成「这个仓没有贡献者」——把失败原因记下来，
+      // 由 completeness 判据决定它是阻塞还是可接受。
+      /** @type {string|null} */
+      let contribFailure = null;
       const contrib = await contributors(/** @type {any} */ (ref.platform), ref, {
         maxPeople: 100,
         token: tokens[ref.platform],
-      }).catch(() => null);
+      }).catch((/** @type {any} */ e) => {
+        contribFailure = String(e?.message ?? e).trim();
+        return null;
+      });
       const merged = contrib
         ? { ...withBase, contributors: contrib.people, contributorTotal: contrib.total }
         : withBase;
@@ -229,7 +236,11 @@ async function main() {
         reasons.maintainer = PLATFORM_LIMITS.ownerNameAbsent;
       }
       if (!contrib) {
-        reasons.contributors = PLATFORM_LIMITS.noContributors;
+        // 抓取失败（网络/限流/缺令牌）与「仓库确实没有贡献者」是两件事：
+        // 前者带 HTTP 状态等细节，会被判据当成阻塞；后者是仓库事实。
+        reasons.contributors = contribFailure
+          ? `contributor-fetch-failed: ${contribFailure}`
+          : PLATFORM_LIMITS.noContributors;
       } else if (merged.contributorTotal === null) {
         reasons.contributorTotal = PLATFORM_LIMITS.contributorTotalAbsent;
       }
