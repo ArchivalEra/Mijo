@@ -39,17 +39,54 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund
           npm install -g @hust-open-atom-club/atomgit-cli@0.7.4 --ignore-scripts --no-audit --no-fund
 
-      - name: Check the catalogue in the repo is deployable
-        # 本 workflow 不派生、也不提交 —— catalogue.yml 是唯一的写入者。
-        # 两个 workflow 各自派生再各自 push 同一个文件会互相顶掉
-        #（实测 8400ebc：deploy 的 `git pull --rebase || true` 吞掉冲突，
-        # 随后在游离 HEAD 上 push 失败）。这里只做两件事：
-        #   1. 跑判据自己的测试，证明它在该红的时候红；
-        #   2. 对**仓库里已有的** catalogue 复跑完整性裁决。
-        # 数据不全 → 这一步红 → 下面的 dispatch 不执行 → 线上继续跑上一版。
+      - name: Check the completeness rule
+        # 判据自己的测试：先证明它会在该红的时候红，再拿它去判数据。
+        run: node --test tests/
+
+      - name: Derive catalogue
+        # 部署流取的是**本次**最新数据，不读仓库里那一份：仓库里的
+        # catalogue 由 catalogue.yml 维护，可能落后一个提交周期。
+        #
+        # 这一步同时是部署闸门：数据不全时派生退出非零（缺令牌/限流/
+        # 网络失败/裸 null 字段），job 立刻失败，下面的 dispatch 不执行，
+        # 线上继续跑上一版。判据见 scripts/completeness.mjs。
+        #
+        # 本步骤**不提交**：catalogue.yml 是 catalogue.json 的唯一写入者。
+        # 两个 workflow 各自提交同一文件会互相顶掉（实测 8400ebc：deploy 的
+        # `git pull --rebase || true` 吞掉冲突，随后在游离 HEAD 上 push 失败）。
+        env:
+          AGCLI_TOKEN: ${{ secrets.MJ_GITCODE_TOKEN }}
+          MJ_GITCODE_TOKEN: ${{ secrets.MJ_GITCODE_TOKEN }}
+          MJ_GITHUB_TOKEN: ${{ secrets.MJ_GITHUB_TOKEN }}
+          MJ_GITEE_TOKEN: ${{ secrets.MJ_GITEE_TOKEN }}
+          MJ_CNB_TOKEN: ${{ secrets.MJ_CNB_TOKEN }}
+          MJ_GITLAB_TOKEN: ${{ secrets.MJ_GITLAB_TOKEN }}
+          MJ_BITBUCKET_TOKEN: ${{ secrets.MJ_BITBUCKET_TOKEN }}
+        run: node scripts/generate-catalogue.mjs
+
+      - name: Wait for the catalogue commit to land
+        # heart 拉的是**仓库里的** site/，不是本次 job 的产物，所以必须等
+        # catalogue.yml 把本次数据提交完再 dispatch，否则上线的是上一版。
+        #
+        # 比对用 scripts/same-catalogue.mjs：它忽略 generatedAt（每次派生都
+        # 不同），其余内容逐字段相同才算就绪。两个 workflow 由同一次 push
+        # 触发，catalogue.yml 通常几秒内完成；这里轮询最多 5 分钟，超时即红。
         run: |
-          node --test tests/
-          node scripts/check-catalogue.mjs site/catalogue.json
+          set -euo pipefail
+          for i in $(seq 1 30); do
+            git fetch --quiet origin main || true
+            if git cat-file -e origin/main:site/catalogue.json 2>/dev/null; then
+              git show origin/main:site/catalogue.json > /tmp/remote-catalogue.json
+              if node scripts/same-catalogue.mjs site/catalogue.json /tmp/remote-catalogue.json; then
+                echo "仓库里的 catalogue 数据与本次派生一致（已忽略 generatedAt）"
+                exit 0
+              fi
+            fi
+            echo "  等待 catalogue.yml 提交本次数据…（$i/30）"
+            sleep 10
+          done
+          echo "::error::等了 5 分钟仓库里的 catalogue 仍与本次派生不同 —— catalogue.yml 可能失败，拒绝部署旧数据"
+          exit 1
 
       - name: Trigger isui.ren-heart deploy (dispatch, no cross-repo write)
         # Mijo 不持有 isui.ren-heart 的写权限，也不去推它的 deploy 分支——
