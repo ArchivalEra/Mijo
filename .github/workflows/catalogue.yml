@@ -69,4 +69,9 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add site/catalogue.json
           git commit -m "chore(catalogue): auto-derived from material/urls.txt"
+          # 本文件是 catalogue.json 的**唯一**写入者；即便如此仍可能有别的
+          # 工作流在同一时刻提交过别的文件，push 前先 rebase。
+          # 不复用 deploy 曾经那套 `|| true`：吞掉 rebase 失败后会在游离 HEAD
+          # 上 push（实测 8400ebc 就是这么红的）。这里失败就是真失败。
+          git pull --rebase origin main
           git push

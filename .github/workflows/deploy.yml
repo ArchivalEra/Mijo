@@ -39,36 +39,17 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund
           npm install -g @hust-open-atom-club/atomgit-cli@0.7.4 --ignore-scripts --no-audit --no-fund
 
-      - name: Derive catalogue
-        # 这一步就是部署闸门：派生在数据不全时退出非零（缺令牌/限流/网络失败/
-        # 裸 null 字段），job 立刻失败，下面的 commit 与 dispatch 都不会执行，
-        # 线上继续跑上一版。判据见 scripts/completeness.mjs。
-        env:
-          AGCLI_TOKEN: ${{ secrets.MJ_GITCODE_TOKEN }}
-          MJ_GITCODE_TOKEN: ${{ secrets.MJ_GITCODE_TOKEN }}
-          MJ_GITHUB_TOKEN: ${{ secrets.MJ_GITHUB_TOKEN }}
-          MJ_GITEE_TOKEN: ${{ secrets.MJ_GITEE_TOKEN }}
-          MJ_CNB_TOKEN: ${{ secrets.MJ_CNB_TOKEN }}
-          MJ_GITLAB_TOKEN: ${{ secrets.MJ_GITLAB_TOKEN }}
-          MJ_BITBUCKET_TOKEN: ${{ secrets.MJ_BITBUCKET_TOKEN }}
-        run: node scripts/generate-catalogue.mjs
-
-      - name: Commit generated catalogue
-        # 必须先提交再 dispatch —— heart 拉的是**仓库里的** site/，
-        # 不是本次 job 的临时产物。不提交，heart 会取到上一版
-        # （实测：generatedAt 一直停在上一次，contributors 也是旧的）。
+      - name: Check the catalogue in the repo is deployable
+        # 本 workflow 不派生、也不提交 —— catalogue.yml 是唯一的写入者。
+        # 两个 workflow 各自派生再各自 push 同一个文件会互相顶掉
+        #（实测 8400ebc：deploy 的 `git pull --rebase || true` 吞掉冲突，
+        # 随后在游离 HEAD 上 push 失败）。这里只做两件事：
+        #   1. 跑判据自己的测试，证明它在该红的时候红；
+        #   2. 对**仓库里已有的** catalogue 复跑完整性裁决。
+        # 数据不全 → 这一步红 → 下面的 dispatch 不执行 → 线上继续跑上一版。
         run: |
-          if git diff --quiet -- site/catalogue.json; then
-            echo "catalogue unchanged"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add site/catalogue.json
-          git commit -m "chore(catalogue): auto-derived from material/urls.txt"
-          # catalogue.yml 也在提交同一个文件，先 rebase 再推，避免互相顶掉
-          git pull --rebase --autostash origin main || true
-          git push
+          node --test tests/
+          node scripts/check-catalogue.mjs site/catalogue.json
 
       - name: Trigger isui.ren-heart deploy (dispatch, no cross-repo write)
         # Mijo 不持有 isui.ren-heart 的写权限，也不去推它的 deploy 分支——
