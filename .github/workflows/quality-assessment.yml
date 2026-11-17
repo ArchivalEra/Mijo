@@ -20,7 +20,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # node 26（26.12.1 起）：2026-10 安全修复线（Brotli RCE / DNS /
+          # TLS ×2 四项全修），与 isui.ren 其余仓同口径；check-latest 防
+          # runner 镜像缓存滞后。别退回 22 —— 22 的 --test 还不支持目录参数，
+          # 且缺失上述安全修复。
+          node-version: 26
+          check-latest: true
 
       - name: Install dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
@@ -62,7 +67,8 @@ jobs:
           record 'shellcheck-workflows' 'shellcheck run blocks of this workflow' "$sc_fail"
 
           # 判据自己的测试：证明它会在该红的时候红。
-          record 'completeness-tests' 'node --test tests/' "$(node --test tests/ >/dev/null 2>&1; echo $?)"
+          if node --test tests/ >/tmp/completeness-tests.log 2>&1; then ct=0; else ct=$?; fi
+          record 'completeness-tests' 'node --test tests/' "$ct"
 
           # 派生一遍 catalogue：现在它会因数据不全而退出非零，
           # 所以这一项同时是「数据通路没断」与「完整性达标」的判据。

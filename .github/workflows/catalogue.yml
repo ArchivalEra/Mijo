@@ -24,7 +24,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # node 26（26.12.1 起）：2026-10 安全修复线（Brotli RCE / DNS /
+          # TLS ×2 四项全修），与 isui.ren 其余仓同口径；check-latest 防
+          # runner 镜像缓存滞后。别退回 22 —— 22 的 --test 还不支持目录参数，
+          # 且缺失上述安全修复。
+          node-version: 26
+          check-latest: true
 
       - name: Install dependencies
         # --ignore-scripts：不执行任何依赖的安装脚本
