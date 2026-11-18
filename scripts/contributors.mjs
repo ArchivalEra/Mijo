@@ -262,24 +262,28 @@ async function gitcode(ref, maxPeople) {
  */
 async function cnb(ref, maxPeople) {
   const token = process.env.MJ_CNB_TOKEN || process.env.CNB_TOKEN;
-  if (!token) return null;
-  try {
-    const { CnbClient } = await import('@xindiwo/git-sdk');
-    const client = new CnbClient({ token });
-    const page = await client.contributors.list({
-      owner: ref.owner, repo: ref.repo, perPage: Math.min(maxPeople, PAGE_SIZE),
-    });
-    const items = page?.items ?? [];
-    if (!items.length) return null;
-    const people = items.slice(0, maxPeople).map((/** @type {any} */ c) => ({
-      login: c.name || c.username || null,
-      avatar: c.avatarUrl || c.avatar_url || null,
-      url: c.htmlUrl || c.web_url || null,
-    }));
-    return { total: null, people, noInfer: true };
-  } catch {
-    return null;
-  }
+  if (!token) throw new Error('CNB 需要访问令牌才能读贡献者（MJ_CNB_TOKEN）');
+  // CNB 的 contributors 端点其实是「活跃排行」，`top` 参数硬上限 10
+  // （实测 perPage=100 直接抛 "top must be between 1 and 10"）。传 100 会被
+  // 拒绝，而旧的 catch 把这条错误吞成 null —— 于是有贡献者的仓库被记成
+  // 「没有贡献者」。这里按平台上限截断，并让失败抛出去（由调用方记 reason）。
+  const CNB_TOP_MAX = 10;
+  const { CnbClient } = await import('@xindiwo/git-sdk');
+  const client = new CnbClient({ token });
+  const page = await client.contributors.list({
+    owner: ref.owner,
+    repo: ref.repo,
+    perPage: Math.min(maxPeople, CNB_TOP_MAX),
+  });
+  const items = page?.items ?? [];
+  if (!items.length) return null;
+  const people = items.slice(0, maxPeople).map((/** @type {any} */ c) => ({
+    login: c.name || c.username || null,
+    avatar: c.avatarUrl || c.avatar_url || null,
+    url: c.htmlUrl || c.web_url || null,
+  }));
+  // 排行长度不是人数：不推断总数（noInfer），页面只显示这几个头像。
+  return { total: null, people, noInfer: true };
 }
 
 /** @typedef {keyof typeof ADAPTERS} SupportedPlatform */

@@ -25,5 +25,5 @@ https://bitbucket.org/atlassian/atlassian-plugins
 # —— Gitee（本机 IP 若被限流会跳过，CI 出口正常）——
 https://gitee.com/mindspore/mindspore
 
-# —— CNB（需要 MJ_CNB_TOKEN，本地没有时跳过）——
-https://cnb.cool/examples/showcase
+# —— CNB（需要 MJ_CNB_TOKEN；该平台的 contributors 是活跃排行，条目不等于人数）——
+https://cnb.cool/npc/CodeBuddy
