@@ -1,11 +1,11 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-18T13:46:55.316Z",
+ "generatedAt": "2026-11-23T16:20:23.531Z",
  "entries": [
   {
    "name": "mindspore",
    "maintainer": "姚小白",
-   "lastCommit": "2026-11-18T15:26:39+08:00",
+   "lastCommit": "2026-11-23T14:41:41+08:00",
    "license": "Apache-2.0",
    "description": "MindSpore is a new open source deep learning training/inference framework that could be used for mobile, edge and cloud scenarios.",
    "avatar": "https://cdn-img.gitcode.com/ed/df/3edd27f1cfdd7128e8957c66be1ce5ad16651ea354997826bcda24153e2c450e.png?time=1757643044512",
@@ -19,7 +19,7 @@
     },
     {
      "login": "zhangyinxia",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-5.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/skateboard.png",
      "url": "https://atomgit.com/zhangyinxia"
     },
     {
@@ -39,7 +39,7 @@
     },
     {
      "login": "skytier",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-6.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/creator.png",
      "url": "https://atomgit.com/skytier"
     },
     {
@@ -49,7 +49,7 @@
     },
     {
      "login": "shen_haochen",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-2.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/agent.png",
      "url": "https://atomgit.com/shen_haochen"
     },
     {
@@ -69,12 +69,12 @@
     },
     {
      "login": "hz893",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-1.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/christmas.png",
      "url": "https://atomgit.com/hz893"
     },
     {
      "login": "xuzhenyoumi",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-4.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/artifact.png",
      "url": "https://atomgit.com/xuzhenyoumi"
     },
     {
@@ -84,7 +84,7 @@
     },
     {
      "login": "luochao60",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-6.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/graduate.png",
      "url": "https://atomgit.com/luochao60"
     },
     {
@@ -104,12 +104,12 @@
     },
     {
      "login": "yt_289",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-2.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/spring-festival.png",
      "url": "https://atomgit.com/yt_289"
     },
     {
      "login": "hbhu_bin",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-4.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/cupid.png",
      "url": "https://atomgit.com/hbhu_bin"
     },
     {
@@ -119,7 +119,7 @@
     },
     {
      "login": "chenshan2623",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-4.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/quyuan.png",
      "url": "https://atomgit.com/chenshan2623"
     },
     {
@@ -133,38 +133,38 @@
      "url": "https://atomgit.com/wusuqin4"
     },
     {
-     "login": "yangjiane",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-3.png",
-     "url": "https://atomgit.com/yangjiane"
-    },
-    {
      "login": "panzhihui1",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-4.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/ops.png",
      "url": "https://atomgit.com/panzhihui1"
     },
     {
+     "login": "yangjiane",
+     "avatar": "https://cdn-static.gitcode.com/avatars/graduate.png",
+     "url": "https://atomgit.com/yangjiane"
+    },
+    {
      "login": "wang-ziqi-code",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-6.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/cloud-native.png",
      "url": "https://atomgit.com/wang-ziqi-code"
     },
     {
      "login": "limingqi107",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-5.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/coder.png",
      "url": "https://atomgit.com/limingqi107"
     },
     {
      "login": "maoyuanpeng1",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-6.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/creator.png",
      "url": "https://atomgit.com/maoyuanpeng1"
     },
     {
      "login": "tiancixiao",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-6.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/coder.png",
      "url": "https://atomgit.com/tiancixiao"
     },
     {
      "login": "yuanqi1104",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-2.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/branch.png",
      "url": "https://atomgit.com/yuanqi1104"
     },
     {
@@ -174,23 +174,23 @@
     },
     {
      "login": "Liangcan-Li",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-6.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/ops.png",
      "url": "https://atomgit.com/Liangcan-Li"
     },
     {
+     "login": "LiNuohang",
+     "avatar": "https://cdn-static.gitcode.com/avatars/cupid.png",
+     "url": "https://atomgit.com/LiNuohang"
+    },
+    {
      "login": "zhaochenjie-huawei",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-1.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/slacker.png",
      "url": "https://atomgit.com/zhaochenjie-huawei"
     },
     {
      "login": "BigSkySea",
      "avatar": "https://cdn-img.gitcode.com/ba/ac/b97a343a11c11baf54841a8a447a5b13429d2983c012dd93f774898eef02a5ea.png",
      "url": "https://atomgit.com/BigSkySea"
-    },
-    {
-     "login": "ginfung",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-3.png",
-     "url": "https://atomgit.com/ginfung"
     },
     {
      "login": "fangwenyi1",
@@ -203,13 +203,13 @@
      "url": "https://atomgit.com/wujueying"
     },
     {
-     "login": "LiNuohang",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-2.png",
-     "url": "https://atomgit.com/LiNuohang"
+     "login": "ginfung",
+     "avatar": "https://cdn-static.gitcode.com/avatars/docs.png",
+     "url": "https://atomgit.com/ginfung"
     },
     {
      "login": "guanqi88",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-4.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/tester.png",
      "url": "https://atomgit.com/guanqi88"
     },
     {
@@ -219,32 +219,32 @@
     },
     {
      "login": "bleub",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-1.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/cd.png",
      "url": "https://atomgit.com/bleub"
     },
     {
      "login": "liuchengji3",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-4.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/student.png",
      "url": "https://atomgit.com/liuchengji3"
     },
     {
      "login": "dingjinshan",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-6.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/christmas.png",
      "url": "https://atomgit.com/dingjinshan"
     },
     {
      "login": "zhangyifan999",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-3.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/reviewer.png",
      "url": "https://atomgit.com/zhangyifan999"
     },
     {
      "login": "fary86",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-1.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/skateboard.png",
      "url": "https://atomgit.com/fary86"
     },
     {
      "login": "huangbingjian1",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-3.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/halloween.png",
      "url": "https://atomgit.com/huangbingjian1"
     },
     {
@@ -254,7 +254,7 @@
     },
     {
      "login": "propathee",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-5.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/community.png",
      "url": "https://atomgit.com/propathee"
     },
     {
@@ -264,12 +264,12 @@
     },
     {
      "login": "Qiao_Fu",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-3.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/creator.png",
      "url": "https://atomgit.com/Qiao_Fu"
     },
     {
      "login": "xiong-pan",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-4.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/collaboration.png",
      "url": "https://atomgit.com/xiong-pan"
     },
     {
@@ -289,12 +289,12 @@
     },
     {
      "login": "xmoqian",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-6.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/quyuan.png",
      "url": "https://atomgit.com/xmoqian"
     },
     {
      "login": "chaijinwei",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-2.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/graduate.png",
      "url": "https://atomgit.com/chaijinwei"
     },
     {
@@ -304,12 +304,12 @@
     },
     {
      "login": "cheng_xiaoli",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-1.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/branch.png",
      "url": "https://atomgit.com/cheng_xiaoli"
     },
     {
      "login": "jonyguo",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-4.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/summer.png",
      "url": "https://atomgit.com/jonyguo"
     },
     {
@@ -319,17 +319,17 @@
     },
     {
      "login": "yanglingyue",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-3.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/docs.png",
      "url": "https://atomgit.com/yanglingyue"
     },
     {
      "login": "gemini524",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-3.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/creator.png",
      "url": "https://atomgit.com/gemini524"
     },
     {
      "login": "shawnylee233",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-5.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/skateboard.png",
      "url": "https://atomgit.com/shawnylee233"
     },
     {
@@ -344,12 +344,12 @@
     },
     {
      "login": "xuxinglei",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-2.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/halloween.png",
      "url": "https://atomgit.com/xuxinglei"
     },
     {
      "login": "leiwei2",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-4.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/skateboard.png",
      "url": "https://atomgit.com/leiwei2"
     },
     {
@@ -359,17 +359,17 @@
     },
     {
      "login": "wangyin888",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-4.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/milk-tea.png",
      "url": "https://atomgit.com/wangyin888"
     },
     {
      "login": "wangyin888",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-4.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/milk-tea.png",
      "url": "https://atomgit.com/wangyin888"
     },
     {
      "login": "yyuse",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-6.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/community.png",
      "url": "https://atomgit.com/yyuse"
     },
     {
@@ -379,12 +379,12 @@
     },
     {
      "login": "lanshaozuishuai",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-3.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/creator.png",
      "url": "https://atomgit.com/lanshaozuishuai"
     },
     {
      "login": "chujinjin",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-5.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/reviewer.png",
      "url": "https://atomgit.com/chujinjin"
     },
     {
@@ -399,27 +399,27 @@
     },
     {
      "login": "wangnan39",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-5.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/skateboard.png",
      "url": "https://atomgit.com/wangnan39"
     },
     {
      "login": "wei_zhuoyi",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-1.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/christmas.png",
      "url": "https://atomgit.com/wei_zhuoyi"
     },
     {
      "login": "zhanglei546",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-6.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/creator.png",
      "url": "https://atomgit.com/zhanglei546"
     },
     {
      "login": "shuqian0",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-2.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/slacker.png",
      "url": "https://atomgit.com/shuqian0"
     },
     {
      "login": "huangyi",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-4.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/reviewer.png",
      "url": "https://atomgit.com/huangyi"
     },
     {
@@ -434,32 +434,32 @@
     },
     {
      "login": "baochong1",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-1.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/cloud-native.png",
      "url": "https://atomgit.com/baochong1"
     },
     {
      "login": "hulongjie",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-4.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/global.png",
      "url": "https://atomgit.com/hulongjie"
     },
     {
      "login": "xmoqian",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-6.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/quyuan.png",
      "url": "https://atomgit.com/xmoqian"
     },
     {
      "login": "zxx_xxz",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-2.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/coder.png",
      "url": "https://atomgit.com/zxx_xxz"
     },
     {
      "login": "pph",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-5.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/global.png",
      "url": "https://atomgit.com/pph"
     },
     {
      "login": "qujianwei",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-4.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/halloween.png",
      "url": "https://atomgit.com/qujianwei"
     },
     {
@@ -469,7 +469,7 @@
     },
     {
      "login": "wangpingan2",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-3.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/global.png",
      "url": "https://atomgit.com/wangpingan2"
     },
     {
@@ -489,12 +489,12 @@
     },
     {
      "login": "qll1998",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-3.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/release.png",
      "url": "https://atomgit.com/qll1998"
     },
     {
      "login": "wjlflyer",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-6.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/branch.png",
      "url": "https://atomgit.com/wjlflyer"
     },
     {
@@ -509,7 +509,7 @@
     },
     {
      "login": "horcham_zhq",
-     "avatar": "https://cdn-static.gitcode.com/doc/avatar-5.png",
+     "avatar": "https://cdn-static.gitcode.com/avatars/ai-coder.png",
      "url": "https://atomgit.com/horcham_zhq"
     }
    ],
@@ -519,7 +519,7 @@
   {
    "name": "node",
    "maintainer": "nodejs",
-   "lastCommit": "2026-11-18T13:18:53Z",
+   "lastCommit": "2026-11-23T13:51:49Z",
    "license": "MIT",
    "description": "Node.js JavaScript runtime ✨🐢🚀✨",
    "avatar": "https://avatars.githubusercontent.com/u/9950313?v=4",
@@ -812,14 +812,14 @@
      "url": "https://github.com/devsnek"
     },
     {
-     "login": "Renegade334",
-     "avatar": "https://avatars.githubusercontent.com/u/9092381?v=4",
-     "url": "https://github.com/Renegade334"
-    },
-    {
      "login": "deokjinkim",
      "avatar": "https://avatars.githubusercontent.com/u/5592478?v=4",
      "url": "https://github.com/deokjinkim"
+    },
+    {
+     "login": "Renegade334",
+     "avatar": "https://avatars.githubusercontent.com/u/9092381?v=4",
+     "url": "https://github.com/Renegade334"
     },
     {
      "login": "theanarkh",
@@ -862,9 +862,9 @@
      "url": "https://github.com/himself65"
     },
     {
-     "login": "joaocgreis",
-     "avatar": "https://avatars.githubusercontent.com/u/134460?v=4",
-     "url": "https://github.com/joaocgreis"
+     "login": "daeyeon",
+     "avatar": "https://avatars.githubusercontent.com/u/6630703?v=4",
+     "url": "https://github.com/daeyeon"
     },
     {
      "login": "BethGriggs",
@@ -872,19 +872,19 @@
      "url": "https://github.com/BethGriggs"
     },
     {
-     "login": "daeyeon",
-     "avatar": "https://avatars.githubusercontent.com/u/6630703?v=4",
-     "url": "https://github.com/daeyeon"
-    },
-    {
-     "login": "lundibundi",
-     "avatar": "https://avatars.githubusercontent.com/u/9109612?v=4",
-     "url": "https://github.com/lundibundi"
+     "login": "joaocgreis",
+     "avatar": "https://avatars.githubusercontent.com/u/134460?v=4",
+     "url": "https://github.com/joaocgreis"
     },
     {
      "login": "pimterry",
      "avatar": "https://avatars.githubusercontent.com/u/1526883?v=4",
      "url": "https://github.com/pimterry"
+    },
+    {
+     "login": "lundibundi",
+     "avatar": "https://avatars.githubusercontent.com/u/9109612?v=4",
+     "url": "https://github.com/lundibundi"
     },
     {
      "login": "ryzokuken",
@@ -897,14 +897,14 @@
      "url": "https://github.com/zcbenz"
     },
     {
-     "login": "dario-piotrowicz",
-     "avatar": "https://avatars.githubusercontent.com/u/61631103?v=4",
-     "url": "https://github.com/dario-piotrowicz"
-    },
-    {
      "login": "GeoffreyBooth",
      "avatar": "https://avatars.githubusercontent.com/u/456802?v=4",
      "url": "https://github.com/GeoffreyBooth"
+    },
+    {
+     "login": "dario-piotrowicz",
+     "avatar": "https://avatars.githubusercontent.com/u/61631103?v=4",
+     "url": "https://github.com/dario-piotrowicz"
     },
     {
      "login": "StefanStojanovic",
@@ -917,14 +917,14 @@
      "url": "https://github.com/bzoz"
     },
     {
-     "login": "VoltrexKeyva",
-     "avatar": "https://avatars.githubusercontent.com/u/62040526?v=4",
-     "url": "https://github.com/VoltrexKeyva"
-    },
-    {
      "login": "jbergstroem",
      "avatar": "https://avatars.githubusercontent.com/u/176984?v=4",
      "url": "https://github.com/jbergstroem"
+    },
+    {
+     "login": "VoltrexKeyva",
+     "avatar": "https://avatars.githubusercontent.com/u/62040526?v=4",
+     "url": "https://github.com/VoltrexKeyva"
     },
     {
      "login": "maclover7",
@@ -952,6 +952,11 @@
      "url": "https://github.com/ruyadorno"
     },
     {
+     "login": "ShogunPanda",
+     "avatar": "https://avatars.githubusercontent.com/u/201101?v=4",
+     "url": "https://github.com/ShogunPanda"
+    },
+    {
      "login": "JacksonTian",
      "avatar": "https://avatars.githubusercontent.com/u/327019?v=4",
      "url": "https://github.com/JacksonTian"
@@ -962,19 +967,14 @@
      "url": "https://github.com/ZYSzys"
     },
     {
-     "login": "Flarna",
-     "avatar": "https://avatars.githubusercontent.com/u/18708370?v=4",
-     "url": "https://github.com/Flarna"
-    },
-    {
-     "login": "ShogunPanda",
-     "avatar": "https://avatars.githubusercontent.com/u/201101?v=4",
-     "url": "https://github.com/ShogunPanda"
-    },
-    {
      "login": "gireeshpunathil",
      "avatar": "https://avatars.githubusercontent.com/u/6447530?v=4",
      "url": "https://github.com/gireeshpunathil"
+    },
+    {
+     "login": "Flarna",
+     "avatar": "https://avatars.githubusercontent.com/u/18708370?v=4",
+     "url": "https://github.com/Flarna"
     },
     {
      "login": "ChALkeR",
@@ -982,14 +982,14 @@
      "url": "https://github.com/ChALkeR"
     },
     {
-     "login": "srl295",
-     "avatar": "https://avatars.githubusercontent.com/u/855219?v=4",
-     "url": "https://github.com/srl295"
-    },
-    {
      "login": "cclauss",
      "avatar": "https://avatars.githubusercontent.com/u/3709715?v=4",
      "url": "https://github.com/cclauss"
+    },
+    {
+     "login": "srl295",
+     "avatar": "https://avatars.githubusercontent.com/u/855219?v=4",
+     "url": "https://github.com/srl295"
     },
     {
      "login": "bengl",
@@ -1012,18 +1012,18 @@
      "url": "https://github.com/dnlup"
     },
     {
-     "login": "edsadr",
-     "avatar": "https://avatars.githubusercontent.com/u/1189785?v=4",
-     "url": "https://github.com/edsadr"
+     "login": "jakecastelli",
+     "avatar": "https://avatars.githubusercontent.com/u/38635403?v=4",
+     "url": "https://github.com/jakecastelli"
     }
    ],
-   "contributorTotal": 4563,
+   "contributorTotal": 4571,
    "reasons": {}
   },
   {
    "name": "gitlab-runner",
    "maintainer": "GitLab.org",
-   "lastCommit": "2026-11-18T17:09:32.000+05:30",
+   "lastCommit": "2026-11-23T18:55:55.000+05:30",
    "license": "MIT",
    "description": "GitLab Runner is the open source project that is used to run your CI/CD jobs and send the results back to GitLab",
    "avatar": "https://gitlab.com/uploads/-/system/group/avatar/9970/project_avatar.png?v=1750616408",
@@ -1032,12 +1032,12 @@
    "contributors": [
     {
      "login": "GitLab Renovate Bot",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1795006024",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1795448800",
      "url": "https://gitlab.com/gitlab-bot"
     },
     {
      "login": "Axel von Bertoldi",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/11925179/avatar.png?v=1794845449",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/11925179/avatar.png?v=1795450140",
      "url": "https://gitlab.com/avonbertoldi"
     },
     {
@@ -1047,7 +1047,7 @@
     },
     {
      "login": "Stan Hu",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1795009133",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1795446236",
      "url": "https://gitlab.com/stanhu"
     },
     {
@@ -1077,7 +1077,7 @@
     },
     {
      "login": "Roshni Sarangadharan",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/21979359/avatar.png?v=1794972062",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/21979359/avatar.png?v=1795437780",
      "url": "https://gitlab.com/rsarangadharan"
     },
     {
@@ -1102,7 +1102,7 @@
     },
     {
      "login": "Romuald Atchadé",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/8111826/avatar.png?v=1794960032",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/8111826/avatar.png?v=1795392002",
      "url": "https://gitlab.com/ratchade"
     },
     {
@@ -1117,13 +1117,13 @@
     },
     {
      "login": "Vishal Tak",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/10764887/avatar.png?v=1795003423",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/10764887/avatar.png?v=1795436603",
      "url": "https://gitlab.com/vtak"
     },
     {
-     "login": "Evan Read",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/2683848/avatar.png?v=1795007491",
-     "url": "https://gitlab.com/eread"
+     "login": "Ashvin Sharma",
+     "avatar": "https://secure.gravatar.com/avatar/24f7441e995eb5be91f7b661ba5e35c2172a3e05d734fc6b2334615a5a652fc8?s=80&d=identicon",
+     "url": "https://gitlab.com/ashsharma"
     },
     {
      "login": "Love Bhardwaj",
@@ -1131,9 +1131,9 @@
      "url": null
     },
     {
-     "login": "Ashvin Sharma",
-     "avatar": "https://secure.gravatar.com/avatar/24f7441e995eb5be91f7b661ba5e35c2172a3e05d734fc6b2334615a5a652fc8?s=80&d=identicon",
-     "url": "https://gitlab.com/ashsharma"
+     "login": "Evan Read",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/2683848/avatar.png?v=1795416495",
+     "url": "https://gitlab.com/eread"
     },
     {
      "login": "Timo Furrer",
@@ -1157,7 +1157,7 @@
     },
     {
      "login": "Anthony Juckel",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/12968147/avatar.png?v=1793849919",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/12968147/avatar.png?v=1795436784",
      "url": "https://gitlab.com/ajuckel"
     },
     {
@@ -1216,18 +1216,23 @@
      "url": null
     },
     {
+     "login": "Darren Eastman",
+     "avatar": "https://secure.gravatar.com/avatar/308539619e7c50bc2089053dd69d02feba9ab72ae9304dfcb58068945d245a08?s=80&d=identicon",
+     "url": "https://gitlab.com/deastman"
+    },
+    {
      "login": "Vikrant Singh Parihar",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/42895250/avatar.png?v=1794993504",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/42895250/avatar.png?v=1795144758",
      "url": "https://gitlab.com/pariharvikranr2000"
     },
     {
      "login": "Kam Kyrala",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19859972/avatar.png?v=1795008534",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19859972/avatar.png?v=1795424895",
      "url": "https://gitlab.com/kkyrala"
     },
     {
      "login": "Andrew Dunn",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/28633741/avatar.png?v=1795003194",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/28633741/avatar.png?v=1795449722",
      "url": "https://gitlab.com/andunn"
     },
     {
@@ -1242,13 +1247,13 @@
     },
     {
      "login": "Davis Bickford",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/12695721/avatar.png?v=1794960068",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/12695721/avatar.png?v=1795392001",
      "url": "https://gitlab.com/dbickford"
     },
     {
-     "login": "Darren Eastman",
-     "avatar": "https://secure.gravatar.com/avatar/308539619e7c50bc2089053dd69d02feba9ab72ae9304dfcb58068945d245a08?s=80&d=identicon",
-     "url": "https://gitlab.com/deastman"
+     "login": "Jeston Singh",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/42048126/avatar.png?v=1795412507",
+     "url": "https://gitlab.com/sjestonsingh"
     },
     {
      "login": "Mridankan Mandal",
@@ -1262,7 +1267,7 @@
     },
     {
      "login": "Ben Bodenmiller",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/5332/avatar.png?v=1794980910",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/5332/avatar.png?v=1795420315",
      "url": "https://gitlab.com/bbodenmiller"
     },
     {
@@ -1271,14 +1276,19 @@
      "url": "https://gitlab.com/sgerman"
     },
     {
-     "login": "Jeston Singh",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/42048126/avatar.png?v=1795007823",
-     "url": "https://gitlab.com/sjestonsingh"
+     "login": "Giannis Kepas",
+     "avatar": "https://secure.gravatar.com/avatar/9ca202b7d14452fac0a8ec21631d23fae83d010fe7fc44ba1827f79618a6b2c7?s=80&d=identicon",
+     "url": "https://gitlab.com/contact"
     },
     {
      "login": "Emmanuel 326",
      "avatar": null,
      "url": null
+    },
+    {
+     "login": "Abdul Moiz",
+     "avatar": "https://secure.gravatar.com/avatar/132ec392bc8bf9b06d2006dc2c73c0c9ef40d921b7d74c22430438c3f1fcccb2?s=80&d=identicon",
+     "url": "https://gitlab.com/abdulmoizx97"
     },
     {
      "login": "Stéphane Talbot",
@@ -1292,12 +1302,12 @@
     },
     {
      "login": "Philipp Hahn",
-     "avatar": "https://secure.gravatar.com/avatar/1b2a667a706cac2fdd1bd8a58beb79309a8363c528a36883da612ac2f1283f41?s=80&d=identicon",
-     "url": "https://gitlab.com/p.hahn"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Kevin Lew",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19662303/avatar.png?v=1794961836",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19662303/avatar.png?v=1795392043",
      "url": "https://gitlab.com/klew-ext"
     },
     {
@@ -1311,24 +1321,19 @@
      "url": null
     },
     {
-     "login": "Katrin Leinweber",
+     "login": "Toon Claes",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/660180/avatar.png?v=1795443553",
+     "url": "https://gitlab.com/toon"
+    },
+    {
+     "login": "Manish Kumar",
      "avatar": null,
      "url": null
     },
     {
-     "login": "Toon Claes",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/660180/avatar.png?v=1795007943",
-     "url": "https://gitlab.com/toon"
-    },
-    {
-     "login": "Giannis Kepas",
-     "avatar": "https://secure.gravatar.com/avatar/9ca202b7d14452fac0a8ec21631d23fae83d010fe7fc44ba1827f79618a6b2c7?s=80&d=identicon",
-     "url": "https://gitlab.com/contact"
-    },
-    {
      "login": "Maria Jose Salmeron Ibáñez",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/20946219/avatar.png?v=1795008421",
-     "url": "https://gitlab.com/mjsibanez"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Sepehr Heydari",
@@ -1391,7 +1396,22 @@
      "url": null
     },
     {
-     "login": "Manish Kumar",
+     "login": "Duo Developer",
+     "avatar": null,
+     "url": null
+    },
+    {
+     "login": "Edward Hilgendorf",
+     "avatar": null,
+     "url": null
+    },
+    {
+     "login": "Fabien Catteau",
+     "avatar": null,
+     "url": null
+    },
+    {
+     "login": "aryan105825",
      "avatar": null,
      "url": null
     },
@@ -1496,6 +1516,11 @@
      "url": null
     },
     {
+     "login": "Katrin Leinweber",
+     "avatar": null,
+     "url": null
+    },
+    {
      "login": "Joe Randazzo",
      "avatar": null,
      "url": null
@@ -1504,34 +1529,9 @@
      "login": "Julius Kvedaras",
      "avatar": null,
      "url": null
-    },
-    {
-     "login": "Jessie Lee",
-     "avatar": null,
-     "url": null
-    },
-    {
-     "login": "Ashraf Khamis",
-     "avatar": null,
-     "url": null
-    },
-    {
-     "login": "Pedro Pombeiro",
-     "avatar": null,
-     "url": null
-    },
-    {
-     "login": "Kevin Dzaky",
-     "avatar": null,
-     "url": null
-    },
-    {
-     "login": "Abdul Moiz",
-     "avatar": null,
-     "url": null
     }
    ],
-   "contributorTotal": 249,
+   "contributorTotal": 252,
    "reasons": {}
   },
   {
@@ -2221,12 +2221,17 @@
      "url": null
     },
     {
-     "login": "俗人",
+     "login": "momo",
      "avatar": null,
      "url": null
     },
     {
-     "login": "小桂子",
+     "login": "刹那yy",
+     "avatar": null,
+     "url": null
+    },
+    {
+     "login": "俗人",
      "avatar": null,
      "url": null
     },
@@ -2236,12 +2241,7 @@
      "url": null
     },
     {
-     "login": "momo",
-     "avatar": null,
-     "url": null
-    },
-    {
-     "login": "宋冬冬🦕",
+     "login": "小桂子",
      "avatar": null,
      "url": null
     },
@@ -2256,12 +2256,12 @@
      "url": null
     },
     {
-     "login": "⁷",
+     "login": "宋冬冬🦕",
      "avatar": null,
      "url": null
     },
     {
-     "login": "koi.",
+     "login": "⁷",
      "avatar": null,
      "url": null
     }
