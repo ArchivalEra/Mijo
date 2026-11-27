@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-27T09:43:48.006Z",
+ "generatedAt": "2026-11-27T14:19:00.605Z",
  "entries": [
   {
    "name": "mindspore",
@@ -519,7 +519,7 @@
   {
    "name": "node",
    "maintainer": "nodejs",
-   "lastCommit": "2026-11-27T09:19:44Z",
+   "lastCommit": "2026-11-27T13:33:24Z",
    "license": "MIT",
    "description": "Node.js JavaScript runtime ✨🐢🚀✨",
    "avatar": "https://avatars.githubusercontent.com/u/9950313?v=4",
@@ -1007,23 +1007,23 @@
      "url": "https://github.com/jakecastelli"
     },
     {
-     "login": "seishun",
-     "avatar": "https://avatars.githubusercontent.com/u/988441?v=4",
-     "url": "https://github.com/seishun"
+     "login": "inoway46",
+     "avatar": "https://avatars.githubusercontent.com/u/65857152?v=4",
+     "url": "https://github.com/inoway46"
     },
     {
-     "login": "dnlup",
-     "avatar": "https://avatars.githubusercontent.com/u/15520377?v=4",
-     "url": "https://github.com/dnlup"
+     "login": "edsadr",
+     "avatar": "https://avatars.githubusercontent.com/u/1189785?v=4",
+     "url": "https://github.com/edsadr"
     }
    ],
-   "contributorTotal": 4574,
+   "contributorTotal": 4575,
    "reasons": {}
   },
   {
    "name": "gitlab-runner",
    "maintainer": "GitLab.org",
-   "lastCommit": "2026-11-27T13:53:25.000+05:30",
+   "lastCommit": "2026-11-27T19:02:02.000+05:30",
    "license": "MIT",
    "description": "GitLab Runner is the open source project that is used to run your CI/CD jobs and send the results back to GitLab",
    "avatar": "https://gitlab.com/uploads/-/system/group/avatar/9970/project_avatar.png?v=1750616408",
@@ -1032,7 +1032,7 @@
    "contributors": [
     {
      "login": "GitLab Renovate Bot",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1795769249",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1795787251",
      "url": "https://gitlab.com/gitlab-bot"
     },
     {
@@ -1057,7 +1057,7 @@
     },
     {
      "login": "Stan Hu",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1795755424",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/64248/stanhu.jpg?v=1795787319",
      "url": "https://gitlab.com/stanhu"
     },
     {
@@ -1082,7 +1082,7 @@
     },
     {
      "login": "Roshni Sarangadharan",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/21979359/avatar.png?v=1795767745",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/21979359/avatar.png?v=1795785841",
      "url": "https://gitlab.com/rsarangadharan"
     },
     {
@@ -1122,7 +1122,7 @@
     },
     {
      "login": "Evan Read",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/2683848/avatar.png?v=1795767852",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/2683848/avatar.png?v=1795787139",
      "url": "https://gitlab.com/eread"
     },
     {
@@ -1217,43 +1217,43 @@
     },
     {
      "login": "Vikrant Singh Parihar",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/42895250/avatar.png?v=1795755501",
-     "url": "https://gitlab.com/pariharvikranr2000"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Kam Kyrala",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19859972/avatar.png?v=1795770473",
-     "url": "https://gitlab.com/kkyrala"
-    },
-    {
-     "login": "Darren Eastman",
-     "avatar": "https://secure.gravatar.com/avatar/308539619e7c50bc2089053dd69d02feba9ab72ae9304dfcb58068945d245a08?s=80&d=identicon",
-     "url": "https://gitlab.com/deastman"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Andrew Dunn",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/28633741/avatar.png?v=1795753247",
-     "url": "https://gitlab.com/andunn"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Brendan Lynch",
-     "avatar": "https://secure.gravatar.com/avatar/545def3bc1be5eb059d9c40d1a005257d2376dd71a2d8b26408a3079bfa96fde?s=80&d=identicon",
-     "url": "https://gitlab.com/blynch"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Rasam Hossain",
-     "avatar": "https://secure.gravatar.com/avatar/c2ea215e490d00c3e9061588f462b0de7c5a4f76300b71f83059bdc151943704?s=80&d=identicon",
-     "url": "https://gitlab.com/rhossain"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Davis Bickford",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/12695721/avatar.png?v=1795564831",
-     "url": "https://gitlab.com/dbickford"
+     "avatar": null,
+     "url": null
+    },
+    {
+     "login": "Darren Eastman",
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Jeston Singh",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/42048126/avatar.png?v=1795766571",
-     "url": "https://gitlab.com/sjestonsingh"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Mridankan Mandal",
@@ -1262,18 +1262,18 @@
     },
     {
      "login": "Matias Alvarez",
-     "avatar": "https://secure.gravatar.com/avatar/4fe9e5db7f6b4c3362ed42e14e9264de248fec7f3e2d7963ef3d2cc45f6c3f65?s=80&d=identicon",
-     "url": "https://gitlab.com/malvarez"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Ben Bodenmiller",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/5332/avatar.png?v=1795668438",
-     "url": "https://gitlab.com/bbodenmiller"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Abdul Moiz",
-     "avatar": "https://secure.gravatar.com/avatar/132ec392bc8bf9b06d2006dc2c73c0c9ef40d921b7d74c22430438c3f1fcccb2?s=80&d=identicon",
-     "url": "https://gitlab.com/abdulmoizx97"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Emmanuel 326",
@@ -1282,8 +1282,8 @@
     },
     {
      "login": "Justin Farmiloe",
-     "avatar": "https://secure.gravatar.com/avatar/d29d57cdd442edcb499324d7e1851b377a537102ec12f933f1d6f83efe6d46c5?s=80&d=identicon",
-     "url": "https://gitlab.com/jfarmiloe"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Stéphane Talbot",
@@ -1292,23 +1292,18 @@
     },
     {
      "login": "Lysanne Pinto",
-     "avatar": "https://secure.gravatar.com/avatar/02a3bba6affce4cdef5c5689be95555c189766cdf7c0164e4a854b2106f0648b?s=80&d=identicon",
-     "url": "https://gitlab.com/lpinto"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Philipp Hahn",
-     "avatar": "https://secure.gravatar.com/avatar/1b2a667a706cac2fdd1bd8a58beb79309a8363c528a36883da612ac2f1283f41?s=80&d=identicon",
-     "url": "https://gitlab.com/p.hahn"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Kevin Lew",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19662303/avatar.png?v=1795739072",
-     "url": "https://gitlab.com/klew-ext"
-    },
-    {
-     "login": "Sarah German",
-     "avatar": "https://secure.gravatar.com/avatar/b76650c037faf84c9448566008bc766fe0183411dc469d8e37a4dd86ef0a5d33?s=80&d=identicon",
-     "url": "https://gitlab.com/sgerman"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Sven Geisler",
@@ -1317,11 +1312,11 @@
     },
     {
      "login": "Toon Claes",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/660180/avatar.png?v=1795770948",
-     "url": "https://gitlab.com/toon"
+     "avatar": null,
+     "url": null
     },
     {
-     "login": "Sigurd Spieckermann",
+     "login": "Reet Singh",
      "avatar": null,
      "url": null
     },
@@ -1391,17 +1386,22 @@
      "url": null
     },
     {
+     "login": "Sarah German",
+     "avatar": null,
+     "url": null
+    },
+    {
      "login": "Michael Trainor",
      "avatar": null,
      "url": null
     },
     {
-     "login": "Mohamed Elsayed",
+     "login": "Sigurd Spieckermann",
      "avatar": null,
      "url": null
     },
     {
-     "login": "Reet Singh",
+     "login": "Mohamed Elsayed",
      "avatar": null,
      "url": null
     },
@@ -1894,8 +1894,8 @@
     },
     {
      "login": "sunsuodong",
-     "avatar": null,
-     "url": null
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/sunsuodong"
     },
     {
      "login": "shenwei41",
@@ -2158,9 +2158,9 @@
      "url": "https://gitee.com/hejianheng001"
     },
     {
-     "login": "7347157+joylvliang@user.noreply.gitee.com",
-     "avatar": null,
-     "url": null
+     "login": "joylvliang",
+     "avatar": "https://gitee.com/assets/no_portrait.png",
+     "url": "https://gitee.com/joylvliang"
     },
     {
      "login": "chenjianping",
