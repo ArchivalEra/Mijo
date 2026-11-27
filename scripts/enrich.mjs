@@ -241,37 +241,71 @@ export function identifyLicense(text) {
  * @param {{tokens?:Record<string,string>}} [options]
  * @returns {Promise<Record<string,any>>}
  */
+/**
+ * 取真实的最后提交时间。只接受真提交时间，取不到就 null——
+ * 绝不拿 pushedAt 顶替，页面上的日期要能分辨真假。
+ * @param {RepoRef} ref @param {string} platform @param {string} [token]
+ * @returns {Promise<string|null>}
+ */
+async function realLastCommit(ref, platform, token) {
+  /** @type {(ref: RepoRef, token?: string) => Promise<string|null>} */
+  const lc = /** @type {Record<string, any>} */ (LAST_COMMIT)[platform];
+  if (!lc || !ref.owner || !ref.repo) return null;
+  try {
+    return await lc(ref, token) ?? null;
+  } catch {
+    return null; // 拿不到就留空；原因由调用方按 PLATFORM_LIMITS 装配
+  }
+}
+
+/**
+ * 仓库对象里的 license 值。GitHub 用 NOASSERTION 表示「有 LICENSE 文件但
+ * 识别不出 SPDX」，那是一个「未知」标记而不是 license 名，展示没有意义，
+ * 按缺失处理，交给 LICENSE 正文探测。
+ * @param {any} license
+ * @returns {string|null}
+ */
+function normalizeLicense(license) {
+  if (typeof license !== 'string') return license ?? null;
+  return /^NOASSERTION$/i.test(license.trim()) ? null : license;
+}
+
+/**
+ * 仓库对象没有 license 时，读 LICENSE 文件猜 SPDX。
+ * @param {RepoRef} ref @param {string} platform @param {string} [token]
+ * @returns {Promise<string|null>}
+ */
+async function probeLicense(ref, platform, token) {
+  /** @type {(ref: RepoRef, token?: string) => Promise<string|null>} */
+  const probe = /** @type {Record<string, any>} */ (LICENSE_PROBE)[platform];
+  if (!probe) return null;
+  try {
+    return await probe(ref, token) ?? null;
+  } catch {
+    return null; // 留空
+  }
+}
+
+/**
+ * 补齐单个条目的 lastCommit 与 license。
+ * 失败不抛：补不上就保留原值，不因为补充失败而丢掉条目本身。
+ *
+ * @param {Record<string,any>} entry catalogue 条目
+ * @param {{platform:string, owner:string, repo:string, url:string}} ref
+ * @param {{tokens?:Record<string,string>}} [options]
+ * @returns {Promise<Record<string,any>>}
+ */
 export async function enrich(entry, ref, { tokens = {} } = {}) {
   const platform = ref.platform;
+  const target = { owner: ref.owner, repo: ref.repo };
+  const token = tokens[platform];
   const out = { ...entry };
 
-  // lastCommit：只接受真提交时间。取不到就保持 null，由 completeness 判据
-  // 配合 reasons 决定是 degraded 还是 broken——绝不拿 pushedAt 顶替。
-  const lc = /** @type {(ref: RepoRef, token?: string) => Promise<string|null>} */ (
-    /** @type {Record<string, any>} */ (LAST_COMMIT)[platform]);
-  if (lc && ref.owner && ref.repo) {
-    try {
-      const real = await lc({ owner: ref.owner, repo: ref.repo }, tokens[platform]);
-      if (real) out.lastCommit = real;
-    } catch { /* 拿不到就留空；原因由调用方按 PLATFORM_LIMITS 装配 */ }
-  }
+  const real = await realLastCommit(target, platform, token);
+  if (real) out.lastCommit = real;
 
-  // GitHub 用 NOASSERTION 表示「有 LICENSE 文件但识别不出 SPDX」——它是
-  // 一个「未知」标记而不是 license 名。直接展示对读者没有意义，按缺失处理：
-  // 先当空，再走下面的 LICENSE 正文探测；探测也认不出就如实留空（带 reason）。
-  if (typeof out.license === 'string' && /^NOASSERTION$/i.test(out.license.trim())) {
-    out.license = null;
-  }
+  out.license = normalizeLicense(out.license);
+  if (!out.license) out.license = await probeLicense(target, platform, token);
 
-  if (!out.license) {
-    /** @type {(ref: RepoRef, token?: string) => Promise<string|null>} */
-    const probe = /** @type {(ref: RepoRef, token?: string) => Promise<string|null>} */ (
-      /** @type {Record<string, any>} */ (LICENSE_PROBE)[platform]);
-    if (probe) {
-      try {
-        out.license = await probe({ owner: ref.owner, repo: ref.repo }, tokens[platform]) ?? null;
-      } catch { /* 留空 */ }
-    }
-  }
   return out;
 }

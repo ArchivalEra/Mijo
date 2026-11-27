@@ -208,28 +208,53 @@ function judgeEmptyField(entry, field) {
  * @param {any} entry
  * @returns {{failures:string[], notes:string[]}}
  */
-function checkOneEntry(entry) {
-  const label = entry?.url ?? '(无 url 的条目)';
+/** 必需字段缺失的原因，逐条。 @param {any} entry @param {string} label */
+function requiredFieldFailures(entry, label) {
+  /** @type {string[]} */
+  const failures = [];
+  for (const field of REQUIRED_FIELDS) {
+    if (!hasText(entry?.[field])) failures.push(`${label}: 必需字段 ${field} 为空`);
+  }
+  return failures;
+}
+
+/**
+ * 可降级字段的裁决：返回阻塞项与降级项。
+ * @param {any} entry
+ * @returns {{failures:string[], notes:string[]}}
+ */
+function degradableFieldVerdicts(entry) {
   /** @type {string[]} */
   const failures = [];
   /** @type {string[]} */
   const notes = [];
-
-  for (const field of REQUIRED_FIELDS) {
-    if (!hasText(entry?.[field])) failures.push(`${label}: 必需字段 ${field} 为空`);
-  }
-
   for (const field of DEGRADABLE_FIELDS) {
     if (!isEmptyField(entry?.[field])) continue;
     const verdict = judgeEmptyField(entry, field);
     (verdict.blocking ? failures : notes).push(verdict.text);
   }
+  return { failures, notes };
+}
+
+/**
+ * 二级：单个 entry 的字段。
+ *
+ * 必需字段缺了直接阻塞；可降级字段缺了必须带白名单内的原因。带
+ * `fetch-failed:` 原因说明「不是没有，是没抓到」，同样阻塞。
+ *
+ * @param {any} entry
+ * @returns {{failures:string[], notes:string[]}}
+ */
+function checkOneEntry(entry) {
+  const label = entry?.url ?? '(无 url 的条目)';
+  const fields = degradableFieldVerdicts(entry);
+  const failures = requiredFieldFailures(entry, label);
 
   // 最后提交时间不能用 pushed_at 顶替：页面上的日期无法分辨真假。
   if (entry?.lastCommitProvenance === 'pushed-at') {
     failures.push(`${label}: lastCommit 用了 pushed_at 顶替，不是真实提交时间`);
   }
-  return { failures, notes };
+  return { failures: [...failures, ...fields.failures], notes: fields.notes };
 }
 
 /**

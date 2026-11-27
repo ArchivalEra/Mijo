@@ -47,9 +47,36 @@ function authQuery(token, name, sep) {
   return `${sep}${name}=${encodeURIComponent(token)}`;
 }
 
+/** 超过这个秒数的 retry-after 就不值得等：立刻失败，让 CI 快速红并说清原因。 */
+const MAX_RETRY_WAIT = 60;
+
 /**
- * GET + JSON。429/403（限流）退避重试一次；仍失败就返回 ok:false，
- * 让上层 fail-closed（不产假数）。
+ * 从响应头里读 retry-after 秒数。支持秒数与 HTTP 日期两种写法。
+ * @param {Headers|null} [headers]
+ * @returns {number} 秒；读不到返回 0
+ */
+function retryAfterSeconds(headers) {
+  const raw = headers?.get?.('retry-after');
+  if (!raw) return 0;
+  const secs = Number(raw);
+  if (Number.isFinite(secs)) return secs;
+  const at = Date.parse(raw);
+  if (Number.isNaN(at)) return 0;
+  return Math.max(0, Math.ceil((at - Date.now()) / 1000));
+}
+
+/**
+ * GET + JSON。
+ *
+ * 限流（429/403）时必须**先看 retry-after**：GitLab 匿名配额耗尽时会要求等
+ * 3006 秒，而旧代码写死等 1.5 秒就重试 —— 等 1.5 秒必然还是 429，于是每个
+ * 贡献者查一次账号就撞一次墙，100 人造出 100 次无效重试，CI 卡到超时也拿不到数。
+ *
+ * 现在的规则：
+ *   · retry-after 短于 MAX_RETRY_WAIT → 老实等，再试一次
+ *   · 更长（或读不到但确实是 429）→ 立刻返回限流错误，让上层记成
+ *     `contributor-fetch-failed` 并阻塞，而不是傻等或静默吞掉
+ *
  * @param {string} url @param {Record<string,string>} [headers] @param {number} [attempt]
  */
 async function j(url, headers = {}, attempt = 1) {
@@ -57,12 +84,17 @@ async function j(url, headers = {}, attempt = 1) {
   const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
     const r = await fetch(url, { headers: { ...UA, ...headers }, signal: ctrl.signal });
-    if ((r.status === 429 || r.status === 403) && attempt === 1) {
+    if (!r.ok) {
+      const wait = retryAfterSeconds(r.headers);
+      const limited = r.status === 429 || r.status === 403;
+      const canWait = attempt === 1 && limited && wait > 0 && wait <= MAX_RETRY_WAIT;
+      if (!canWait) {
+        return { ok: false, status: r.status, headers: r.headers, data: null, retryAfter: wait };
+      }
       clearTimeout(t);
-      await new Promise((res) => setTimeout(res, 1500));
+      await new Promise((res) => setTimeout(res, wait * 1000));
       return j(url, headers, 2);
     }
-    if (!r.ok) return { ok: false, status: r.status, headers: r.headers, data: null };
     const ct = r.headers.get('content-type') || '';
     return {
       ok: true,
@@ -128,12 +160,20 @@ function lastPage(headers) {
  * 用 email 的本地部分猜 username，查公开的 /users?username=X 拿头像和主页
  * （实测 7 个贡献者命中 4 个；命不中就退首字母 + 不生成链接）。
  * 总数走 x-total（已验证与逐页数一致），头像只补前 5 个平铺位。
- * @param {{owner:string,repo:string}} ref @param {number} maxPeople
+ *
+ * 必须带 token：这个适配器要为每个贡献者查一次账号，100 人就是 100+ 次请求。
+ * 匿名配额只有 500/分钟且按 IP 算，实测耗尽后 GitLab 会回
+ * `retry-after: 3006`（等 50 分钟）—— 不带 token 这条路根本跑不完。
+ *
+ * @param {{owner:string,repo:string}} ref @param {number} maxPeople @param {string} [token]
  */
-async function gitlab(ref, maxPeople) {
+async function gitlab(ref, maxPeople, token) {
   const pid = encodeURIComponent(`${ref.owner}/${ref.repo}`);
   const base = `https://gitlab.com/api/v4/projects/${pid}/repository/contributors`;
-  const r = await j(`${base}?order_by=commits&sort=desc&per_page=${Math.min(maxPeople, PAGE_SIZE)}`);
+  /** @type {Record<string,string>} */
+  const auth = token ? { 'PRIVATE-TOKEN': token } : {};
+  const list = `${base}?order_by=commits&sort=desc&per_page=${Math.min(maxPeople, PAGE_SIZE)}`;
+  const r = await j(list, auth);
   if (!r.ok || !Array.isArray(r.data)) return null;
 
   /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
@@ -142,11 +182,11 @@ async function gitlab(ref, maxPeople) {
   // 逐人一次请求，串行 + 轻节流，避免 100 次连发被 429。
   for (const [i, c] of r.data.slice(0, maxPeople).entries()) {
     await throttle(i);
-    people.push({ login: c.name || null, ...(await gitlabUser(c.email)) });
+    people.push({ login: c.name || null, ...(await gitlabUser(c.email, auth)) });
   }
 
   // 总数：x-total 头（实测 gitlab-runner 247，与逐页数一致）
-  const probe = await j(`${base}?order_by=commits&sort=desc&per_page=1`);
+  const probe = await j(`${base}?order_by=commits&sort=desc&per_page=1`, auth);
   const totalRaw = probe.headers?.get?.('x-total');
   return { total: totalRaw ? Number(totalRaw) : null, people };
 }
@@ -154,13 +194,13 @@ async function gitlab(ref, maxPeople) {
 /**
  * 用 email 的本地部分猜 username，查公开账号拿头像与主页。
  * email 只在这里读一次，绝不写进返回值或 catalogue。
- * @param {string} [email]
+ * @param {string} [email] @param {Record<string,string>} [auth]
  * @returns {Promise<{avatar:string|null, url:string|null}>}
  */
-async function gitlabUser(email) {
+async function gitlabUser(email, auth = {}) {
   const local = String(email || '').split('@')[0];
   if (!local) return { avatar: null, url: null };
-  const u = await j(`https://gitlab.com/api/v4/users?username=${encodeURIComponent(local)}`);
+  const u = await j(`https://gitlab.com/api/v4/users?username=${encodeURIComponent(local)}`, auth);
   const hit = Array.isArray(u.data) ? u.data[0] : null;
   if (!hit) return { avatar: null, url: null };
   return { avatar: hit.avatar_url || null, url: hit.web_url || null };
@@ -222,24 +262,68 @@ async function giteeUser(name, token) {
  * 而从未提交的贡献者根本不出现。所以标 noInfer，total 恒为 null。
  * @param {{owner:string,repo:string}} ref @param {number} maxPeople
  */
+/**
+ * 从 Bitbucket 的一条 commit 里认出作者。
+ * 优先用已关联的账号（有头像和主页）；没有账号的退成 raw 里的显示名。
+ * @param {any} c
+ * @returns {{login:string, avatar:string|null, url:string|null}|null}
+ */
+function bitbucketAuthor(c) {
+  const u = c?.author?.user || {};
+  const name = u.display_name || String(c?.author?.raw || '').replace(/\s*<.*$/, '');
+  if (!name) return null;
+  return {
+    login: name,
+    avatar: u.links?.avatar?.href || null,
+    url: u.links?.html?.href || null,
+  };
+}
+
+/**
+ * Bitbucket：无 contributors 端点，聚合最近 commits 的作者（近似，不谎报总数）。
+ * 聚合出来的是「提交作者数」，不是贡献者人数：同一个人换邮箱就是两行，
+ * 而从未提交的贡献者根本不出现。所以标 noInfer，total 恒为 null。
+ * @param {{owner:string,repo:string}} ref @param {number} maxPeople
+ */
+/**
+ * 从一页 commit 里收人进 seen，收满 maxPeople 就停。
+ * @param {any[]} values @param {Map<string,any>} seen @param {number} maxPeople
+ */
+function collectAuthors(values, seen, maxPeople) {
+  for (const c of values) {
+    const author = bitbucketAuthor(c);
+    if (!author || seen.has(author.login)) continue;
+    seen.set(author.login, author);
+    if (seen.size >= maxPeople) return;
+  }
+}
+
+/**
+ * 取 Bitbucket 一页 commit 的作者列表；读不到就返回 null。
+ * @param {string} base @param {number} page
+ * @returns {Promise<any[]|null>}
+ */
+async function bitbucketCommitPage(base, page) {
+  const r = await j(`${base}/commits?pagelen=${PAGE_SIZE}&page=${page}`);
+  const values = r.ok ? r.data?.values : null;
+  return Array.isArray(values) ? values : null;
+}
+
+/**
+ * Bitbucket：无 contributors 端点，聚合最近 commits 的作者（近似，不谎报总数）。
+ * 聚合出来的是「提交作者数」，不是贡献者人数：同一个人换邮箱就是两行，
+ * 而从未提交的贡献者根本不出现。所以标 noInfer，total 恒为 null。
+ * @param {{owner:string,repo:string}} ref @param {number} maxPeople
+ */
 async function bitbucket(ref, maxPeople) {
   const base = `https://api.bitbucket.org/2.0/repositories/${ref.owner}/${ref.repo}`;
   const seen = new Map();
-  for (let page = 1; page <= 3 && seen.size < maxPeople; page++) {
-    const r = await j(`${base}/commits?pagelen=${PAGE_SIZE}&page=${page}`);
-    if (!r.ok || !Array.isArray(r.data?.values)) break;
-    for (const c of r.data.values) {
-      const u = c?.author?.user || {};
-      const name = u.display_name || String(c?.author?.raw || '').replace(/\s*<.*$/, '');
-      if (!name || seen.has(name)) continue;
-      seen.set(name, {
-        login: name,
-        avatar: u.links?.avatar?.href || null,
-        url: u.links?.html?.href || null,
-      });
-      if (seen.size >= maxPeople) break;
-    }
-    if (r.data.values.length < PAGE_SIZE) break;
+  for (const page of [1, 2, 3]) {
+    if (seen.size >= maxPeople) break;
+    const values = await bitbucketCommitPage(base, page);
+    if (!values) break;
+    collectAuthors(values, seen, maxPeople);
+    if (values.length < PAGE_SIZE) break;
   }
   if (!seen.size) return null;
   return { total: null, people: [...seen.values()], noInfer: true };

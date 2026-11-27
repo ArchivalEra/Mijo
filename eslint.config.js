@@ -65,12 +65,14 @@ export default [
   },
 
   // ── Sonar 判据：只留 GitRoll 报告里出现过的那几条 ─────────────────
-  // 阈值 15 与 GitRoll 一致，这样本地红 == 扫描红。
+  // 认知复杂度阈值取 8，比 GitRoll 的 15 更严：扫描只是事后报告，本地这条
+  // 是提交前就拦。定 8 是因为实测该仓所有函数都能在 8 以内写清楚，
+  // 超过 8 的基本都在同时干几件事。
   {
     files: ['scripts/**/*.mjs', 'site/**/*.js'],
     plugins: { sonarjs },
     rules: {
-      'sonarjs/cognitive-complexity': ['error', 15],
+      'sonarjs/cognitive-complexity': ['error', 8],
       'sonarjs/no-nested-template-literals': 'error',
       'sonarjs/no-nested-conditional': 'error',
       // 「Prefer using an optional chain expression」没有对应规则：

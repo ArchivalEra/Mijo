@@ -178,21 +178,37 @@ function entryFromSdk(r, ref) {
  * @param {string|null} contribFailure
  * @returns {Record<string,string>}
  */
+/** 字段为空时该填哪个白名单原因。表驱动，避免一长串 if。 */
+const ABSENT_REASONS = [
+  ['lastCommit', PLATFORM_LIMITS.lastCommitAbsent],
+  ['license', PLATFORM_LIMITS.licenseAbsent],
+  ['description', PLATFORM_LIMITS.descriptionAbsent],
+  // 维护者的头像/主页来自各平台仓库对象里的 owner 结构，字段名各不相同；
+  // 平台没给就是没给（不是抓取失败），页面退首字母/无链接即可。
+  ['avatar', PLATFORM_LIMITS.ownerAvatarAbsent],
+  ['profile', PLATFORM_LIMITS.ownerProfileAbsent],
+  ['maintainer', PLATFORM_LIMITS.ownerNameAbsent],
+];
+
+/**
+ * 装配「字段为什么是空的」。缺失必须带原因，否则判据无法区分
+ * 「平台不提供」与「抓取失败」。原因的来源只有两处：平台能力
+ * （PLATFORM_LIMITS）与仓库内容事实。
+ * @param {Record<string,any>} merged
+ * @param {{people?:any[], total?:number|null}|null} contrib
+ * @param {string|null} contribFailure
+ * @returns {Record<string,string>}
+ */
 function buildReasons(merged, contrib, contribFailure) {
   /** @type {Record<string,string>} */
   const reasons = {};
-  if (!merged.lastCommit) reasons.lastCommit = PLATFORM_LIMITS.lastCommitAbsent;
-  if (!merged.license) reasons.license = PLATFORM_LIMITS.licenseAbsent;
-  if (!merged.description) reasons.description = PLATFORM_LIMITS.descriptionAbsent;
-  // 维护者的头像/主页来自各平台仓库对象里的 owner 结构，字段名各不相同；
-  // 平台没给就是没给（不是抓取失败），页面退首字母/无链接即可。
-  if (!merged.avatar) reasons.avatar = PLATFORM_LIMITS.ownerAvatarAbsent;
-  if (!merged.profile) reasons.profile = PLATFORM_LIMITS.ownerProfileAbsent;
-  if (!merged.maintainer) reasons.maintainer = PLATFORM_LIMITS.ownerNameAbsent;
+  for (const [field, reason] of ABSENT_REASONS) {
+    if (!merged[field]) reasons[field] = reason;
+  }
 
+  // 抓取失败（网络/限流/缺令牌）与「仓库确实没有贡献者」是两件事：
+  // 前者带 HTTP 状态等细节，会被判据当成阻塞；后者是仓库事实。
   if (!contrib) {
-    // 抓取失败（网络/限流/缺令牌）与「仓库确实没有贡献者」是两件事：
-    // 前者带 HTTP 状态等细节，会被判据当成阻塞；后者是仓库事实。
     reasons.contributors = contribFailure
       ? `contributor-fetch-failed: ${contribFailure}`
       : PLATFORM_LIMITS.noContributors;
@@ -248,16 +264,38 @@ async function deriveEntry(ref, { sdk, tokens }) {
  */
 function parseInput(raw) {
   const lines = raw.split('\n').map(s => s.trim()).filter(s => s && !s.startsWith('#'));
-  /** @type {{platform:string, owner:string, repo:string, url:string}[]} */
+  /** @type {any[]} */
   const refs = [];
   /** @type {{line:string, ref:any}[]} */
   const unparsed = [];
   for (const line of lines) {
     const ref = parseUrl(line);
-    if (ref?.platform) refs.push(/** @type {any} */ (ref));
+    if (ref?.platform) refs.push(ref);
     else unparsed.push({ line, ref });
   }
   return { refs, unparsed };
+}
+
+/**
+ * 逐条派生。读不到 ≠ 坏了：私有 / 无权限 / 已删除都记原因后拒绝，不产空壳条目。
+ * @param {readonly any[]} refs
+ * @param {{sdk:any, tokens:Record<string,string>}} ctx
+ * @returns {Promise<{entries:Record<string,any>[], rejected:{url:string,reason:string}[]}>}
+ */
+async function deriveAll(refs, ctx) {
+  /** @type {Record<string,any>[]} */
+  const entries = [];
+  /** @type {{url:string, reason:string}[]} */
+  const rejected = [];
+  for (const ref of refs) {
+    try {
+      entries.push(await deriveEntry(ref, ctx));
+    } catch (/** @type {any} */ e) {
+      const msg = String(e?.stderr || e?.message || '').trim().split('\n').pop();
+      rejected.push({ url: ref.url, reason: msg || '读取失败' });
+    }
+  }
+  return { entries, rejected };
 }
 
 /** @returns {Promise<void>} */
@@ -267,30 +305,23 @@ async function main() {
 
   const { tokens, status } = sdkTokens();
   const sdk = createGitSdk(tokens);
-  /** @type {Record<string,any>[]} */
-  const entries = [];
-  /** @type {{url:string, reason:string}[]} */
-  const rejected = [];
 
   console.log('ag-cli auth:', process.env.AGCLI_TOKEN ? 'AGCLI_TOKEN (isolated XDG)' : 'local login');
   console.log('sdk token source:', JSON.stringify(status));
 
+  /** 解析阶段就被丢掉的行（不支持的 host、写坏的行）——它们也必须有下落。 */
+  /** @type {{url:string, reason:string}[]} */
+  const rejectedParse = [];
   for (const { line, ref } of unparsed) {
-    rejected.push({
+    rejectedParse.push({
       url: line,
       reason: ref === null ? '不是可解析的仓库地址' : `不支持的平台：${line}`,
     });
   }
 
-  for (const ref of refs) {
-    try {
-      entries.push(await deriveEntry(ref, { sdk, tokens }));
-    } catch (/** @type {any} */ e) {
-      // 读不到 ≠ 坏了：私有 / 无权限 / 已删除都记原因后拒绝，不产空壳条目。
-      const msg = String(e?.stderr || e?.message || '').trim().split('\n').pop();
-      rejected.push({ url: ref.url, reason: msg || '读取失败' });
-    }
-  }
+  const derived = await deriveAll(refs, { sdk, tokens });
+  const entries = derived.entries;
+  const rejected = [...rejectedParse, ...derived.rejected];
 
   const catalogue = {
     schema: 1,

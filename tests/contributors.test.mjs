@@ -105,3 +105,83 @@ test('the privacy whitelist never carries email through', async (t) => {
   assert.deepEqual(Object.keys(r.people[0]).sort(), ['avatar', 'login', 'url']);
   assert.ok(!JSON.stringify(r).includes('secret.example'), 'email 不得出现在返回值里');
 });
+
+/** 一个 429 响应，带指定的 retry-after。 */
+function rateLimited(retryAfter) {
+  return {
+    ok: false,
+    status: 429,
+    headers: { get: (k) => (k === 'retry-after' ? String(retryAfter) : null) },
+    json: async () => null,
+  };
+}
+
+test('a long retry-after fails fast instead of retrying blindly', async (t) => {
+  // 实测 GitLab 匿名配额耗尽会回 retry-after: 3006（等 50 分钟）。
+  // 旧代码写死等 1.5 秒就重试 —— 必然再次 429，于是每个贡献者撞一次墙。
+  // 现在必须立刻放弃，把「限流」这个事实抛出去（调用方记 reason、判据阻塞），
+  // 而不是耗光 job 时间。
+  let calls = 0;
+  stubFetch(t, async () => { calls += 1; return rateLimited(3006); });
+
+  const started = Date.now();
+  await assert.rejects(
+    () => contributors('gitee', { owner: 'a', repo: 'b' }, { maxPeople: 5 }),
+    /HTTP 429/,
+  );
+  const elapsed = Date.now() - started;
+
+  assert.equal(calls, 1, 'retry-after 太长时不该重试');
+  assert.ok(elapsed < 2000, `不该等 3006 秒（实际 ${elapsed}ms）`);
+});
+
+test('a short retry-after is honoured, and the retry happens once', async (t) => {
+  // 短等待值得重试：这是正常的退避，不是撞墙。
+  // 请求序列：contributors(429) → contributors(重试成功) → 每人一次 users 查询。
+  let calls = 0;
+  stubFetch(t, async (url) => {
+    calls += 1;
+    if (calls === 1) return rateLimited(1);
+    if (String(url).includes('/users/')) return jsonResponse({ message: 'Not Found' });
+    return jsonResponse([{ name: 'alice', email: 'a@x' }]);
+  });
+
+  const r = await contributors('gitee', { owner: 'a', repo: 'b' }, { maxPeople: 5 });
+  assert.equal(calls, 3, '一次重试 + 一次账号查询');
+  assert.equal(r.people.length, 1);
+});
+
+test('a 429 with no retry-after does not spin', async (t) => {
+  // 读不到 retry-after 时不能无限重试：一次就够。
+  let calls = 0;
+  stubFetch(t, async () => {
+    calls += 1;
+    return { ok: false, status: 429, headers: { get: () => null }, json: async () => null };
+  });
+
+  await assert.rejects(() => contributors('gitee', { owner: 'a', repo: 'b' }, { maxPeople: 5 }));
+  assert.equal(calls, 1, '缺 retry-after 时应立即放弃，不重试');
+});
+
+test('gitlab sends its token, since anonymous quota cannot survive 100 lookups', async (t) => {
+  // 每人一次账号查询，100 人就是 100+ 请求；匿名配额 500/分钟按 IP 算，
+  // 实测耗尽后要等 50 分钟。CI 注入了 MJ_GITLAB_TOKEN，必须真的用上。
+  /** @type {Record<string,string>[]} */
+  const seenHeaders = [];
+  stubFetch(t, async (url, init) => {
+    seenHeaders.push(init?.headers ?? {});
+    if (String(url).includes('/contributors')) {
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: (k) => (k === 'content-type' ? 'application/json' : null) },
+        json: async () => [{ name: 'alice', email: 'a@x' }],
+      };
+    }
+    return jsonResponse([]);
+  });
+
+  await contributors('gitlab', { owner: 'a', repo: 'b' }, { maxPeople: 5, token: 'glpat-test' });
+  const used = seenHeaders.some((h) => h['PRIVATE-TOKEN'] === 'glpat-test');
+  assert.ok(used, 'GitLab 请求必须带上 PRIVATE-TOKEN —— 匿名配额撑不住逐人查询');
+});

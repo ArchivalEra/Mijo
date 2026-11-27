@@ -35,41 +35,31 @@ jobs:
           check-latest: true
 
       - name: Install dependencies
-        run: |
-          npm ci --ignore-scripts --no-audit --no-fund
-          npm install -g @hust-open-atom-club/atomgit-cli@0.7.4 --ignore-scripts --no-audit --no-fund
+        # 只装 dependencies —— 不装 ag-cli：本 workflow 不再派生，
+        # 也就不需要平台凭据或 CLI。
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Check the completeness rule
         # 判据自己的测试：先证明它会在该红的时候红，再拿它去判数据。
         run: node --test tests/
 
-      - name: Derive catalogue
-        # 部署流取的是**本次**最新数据，不读仓库里那一份：仓库里的
-        # catalogue 由 catalogue.yml 维护，可能落后一个提交周期。
-        #
-        # 这一步同时是部署闸门：数据不全时派生退出非零（缺令牌/限流/
-        # 网络失败/裸 null 字段），job 立刻失败，下面的 dispatch 不执行，
-        # 线上继续跑上一版。判据见 scripts/completeness.mjs。
-        #
-        # 本步骤**不提交**：catalogue.yml 是 catalogue.json 的唯一写入者。
-        # 两个 workflow 各自提交同一文件会互相顶掉（实测 8400ebc：deploy 的
-        # `git pull --rebase || true` 吞掉冲突，随后在游离 HEAD 上 push 失败）。
-        env:
-          AGCLI_TOKEN: ${{ secrets.MJ_GITCODE_TOKEN }}
-          MJ_GITCODE_TOKEN: ${{ secrets.MJ_GITCODE_TOKEN }}
-          MJ_GITHUB_TOKEN: ${{ secrets.MJ_GITHUB_TOKEN }}
-          MJ_GITEE_TOKEN: ${{ secrets.MJ_GITEE_TOKEN }}
-          MJ_CNB_TOKEN: ${{ secrets.MJ_CNB_TOKEN }}
-          MJ_GITLAB_TOKEN: ${{ secrets.MJ_GITLAB_TOKEN }}
-          MJ_BITBUCKET_TOKEN: ${{ secrets.MJ_BITBUCKET_TOKEN }}
-        run: node scripts/generate-catalogue.mjs
+      # 这里**不再派生**。派生只在 catalogue.yml 做一次，deploy 消费它提交的
+      # 那份数据（下面的 Wait 步骤就是在等它落地）。
+      #
+      # 曾经这里也跑一遍 generate-catalogue.mjs：同一次 push 触发两个 workflow，
+      # 各派生一次，请求数直接翻倍（436 → 872）。GitLab 匿名配额 500/分钟，
+      # 翻倍后必然撞 429，而 retry-after 要求等 3006 秒。慢和红都是这么来的。
+      #
+      # 部署闸门没有削弱：Wait 步骤等不到新提交就红；而 catalogue.yml 自己
+      # 会因数据不全退出非零、不提交、不派发 deploy（deploy 由 push 触发，
+      # 但 heart 拉的永远是仓库里那份，数据不对就不会有那次提交）。
 
       - name: Wait for the catalogue commit to land
         # heart 拉的是**仓库里的** site/，不是本次 job 的产物，所以必须等
         # catalogue.yml 把本次数据提交完再 dispatch，否则上线的是上一版。
         #
-        # 判据是**提交时间**，不是内容相等：两个 workflow 各自派生一次，
-        # 而派生本身不保证逐字节可重复（API 返回顺序、限流、头像可用性都会变）。
+        # 判据是**提交时间**，不是内容相等：派生本身不保证逐字节可重复
+        # （API 返回顺序、限流、头像可用性都会变）。
         # 曾经用「内容一致」判，结果 CI 里等了 31 轮全不等、直接红掉——
         # 那次失败不是数据有问题，是这个判据要求了一件做不到的事。
         #
