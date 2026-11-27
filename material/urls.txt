@@ -6,6 +6,9 @@
 #
 # 匿名可读：GitHub / Gitee / GitLab / Bitbucket 的公开仓
 # 需要令牌：GitCode / AtomGit（MJ_GITCODE_TOKEN）、CNB（MJ_CNB_TOKEN）
+# 令牌可选但强烈建议：GitLab（MJ_GITLAB_TOKEN）—— 它要为每个贡献者单独
+# 查一次账号，匿名配额撑不住（实测耗尽后要求等 50 分钟）；GitHub 不用，
+# 它的 contributors 响应自带 avatar_url 与 html_url，不逐人查。
 #
 # 下面每个平台一个示例仓，都带 10 个以上 contributors —— 用来验证各平台的
 # 头像、人物主页、contributor 总数这三条通路。
