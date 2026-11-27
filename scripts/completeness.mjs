@@ -104,6 +104,153 @@ function isAcceptableRejection(reason) {
 }
 
 /**
+ * 一条 URL 既不在 entries 也不在 rejected 里时，说清楚为什么。
+ * 分开写是为了让「缺凭据」与「纯粹丢了」各自有独立出口，
+ * 而不是挤在一条 else-if 链上。
+ * @param {Ref} ref @param {ReadonlySet<string>} configuredPlatforms
+ * @returns {string}
+ */
+function explainMissingFate(ref, configuredPlatforms) {
+  if (ref.platform === null) {
+    return `${ref.url}: 无法识别的仓库地址（既没进条目也没被拒绝）`;
+  }
+  if (NEEDS_TOKEN.has(ref.platform) && !configuredPlatforms.has(ref.platform)) {
+    return `${ref.url}: 需要 ${ref.platform} 的访问令牌，当前未配置（见 .env.example）`;
+  }
+  return `${ref.url}: 丢失 —— 既没产出条目，也没有拒绝原因`;
+}
+
+/**
+ * 一条 URL 的下落判定：无阻塞返回 null，否则返回原因。
+ * @param {Ref} ref @param {ReadonlySet<string>} entryUrls
+ * @param {ReadonlyMap<string,string>} rejectedUrls
+ * @param {ReadonlySet<string>} configuredPlatforms
+ * @returns {string|null}
+ */
+function judgeFate(ref, entryUrls, rejectedUrls, configuredPlatforms) {
+  if (entryUrls.has(ref.url)) return null;
+
+  const reason = rejectedUrls.get(ref.url);
+  if (reason === undefined) return explainMissingFate(ref, configuredPlatforms);
+  // 有下落，但下落本身可能是不可接受的（缺凭据、网络失败）。
+  if (isAcceptableRejection(reason)) return null;
+  return `${ref.url}: 被拒绝且不可接受 —— ${reason}`;
+}
+
+/**
+ * 一级：每条 URL 都必须有下落。
+ *
+ * 要么在 entries 里，要么在 rejected 里带原因。两种情况之外的一切都是丢失。
+ * 被拒绝的还要分「可接受」与「不可接受」——见 isAcceptableRejection。
+ *
+ * @param {readonly Ref[]} refs
+ * @param {readonly any[]} entries
+ * @param {ReadonlyMap<string,string>} rejectedUrls
+ * @param {ReadonlySet<string>} configuredPlatforms
+ * @returns {string[]} 阻塞原因
+ */
+function checkEveryUrlHasFate(refs, entries, rejectedUrls, configuredPlatforms) {
+  const entryUrls = new Set(entries.map((e) => e?.url).filter(Boolean));
+  /** @type {string[]} */
+  const failures = [];
+  for (const ref of refs) {
+    const failure = judgeFate(ref, entryUrls, rejectedUrls, configuredPlatforms);
+    if (failure) failures.push(failure);
+  }
+  return failures;
+}
+
+/** 字段值是否算「空」。数组按元素数算，字符串按去空白后算。 */
+function isEmptyField(/** @type {any} */ value) {
+  if (value === null || value === undefined) return true;
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === 'string') return value.trim() === '';
+  return false;
+}
+
+/** 字符串是否「有内容」。 @param {any} value */
+function hasText(value) {
+  return typeof value === 'string' && value.trim() !== '';
+}
+
+/**
+ * 一个可降级字段缺失时，它是阻塞还是降级？
+ *
+ * 有白名单原因 → 降级（平台本就不提供）。
+ * 原因是 `*-fetch-failed:` → 阻塞（换环境就能拿到，属于配置/网络问题）。
+ * 没有原因 → 阻塞（裸 null 与抓取失败无法区分）。
+ *
+ * @param {any} entry @param {string} field
+ * @returns {{blocking:boolean, text:string}}
+ */
+function judgeEmptyField(entry, field) {
+  const label = entry?.url ?? '(无 url 的条目)';
+  const reason = entry?.reasons?.[field];
+
+  if (!hasText(reason)) {
+    return {
+      blocking: true,
+      text: `${label}: ${field} 为空且没有说明原因（裸 null 与抓取失败无法区分）`,
+    };
+  }
+  if (/fetch-failed:/i.test(reason)) {
+    return { blocking: true, text: `${label}: ${field} 抓取失败（${reason}）` };
+  }
+  return { blocking: false, text: `${label}: ${field} 缺失（${reason}）` };
+}
+
+/**
+ * 二级：单个 entry 的字段。
+ *
+ * 必需字段缺了直接阻塞；可降级字段缺了必须带白名单内的原因。带
+ * `fetch-failed:` 原因说明「不是没有，是没抓到」，同样阻塞。
+ *
+ * @param {any} entry
+ * @returns {{failures:string[], notes:string[]}}
+ */
+function checkOneEntry(entry) {
+  const label = entry?.url ?? '(无 url 的条目)';
+  /** @type {string[]} */
+  const failures = [];
+  /** @type {string[]} */
+  const notes = [];
+
+  for (const field of REQUIRED_FIELDS) {
+    if (!hasText(entry?.[field])) failures.push(`${label}: 必需字段 ${field} 为空`);
+  }
+
+  for (const field of DEGRADABLE_FIELDS) {
+    if (!isEmptyField(entry?.[field])) continue;
+    const verdict = judgeEmptyField(entry, field);
+    (verdict.blocking ? failures : notes).push(verdict.text);
+  }
+
+  // 最后提交时间不能用 pushed_at 顶替：页面上的日期无法分辨真假。
+  if (entry?.lastCommitProvenance === 'pushed-at') {
+    failures.push(`${label}: lastCommit 用了 pushed_at 顶替，不是真实提交时间`);
+  }
+  return { failures, notes };
+}
+
+/**
+ * 二级：所有 entry 的字段。
+ * @param {readonly any[]} entries
+ * @returns {{failures:string[], notes:string[]}}
+ */
+function checkEntryFields(entries) {
+  /** @type {string[]} */
+  const failures = [];
+  /** @type {string[]} */
+  const notes = [];
+  for (const entry of entries) {
+    const one = checkOneEntry(entry);
+    failures.push(...one.failures);
+    notes.push(...one.notes);
+  }
+  return { failures, notes };
+}
+
+/**
  * 判断一份 catalogue 能不能部署。
  *
  * @param {Object} input
@@ -116,8 +263,6 @@ function isAcceptableRejection(reason) {
 export function assessCompleteness({ refs, entries, rejected = [], configuredPlatforms }) {
   /** @type {string[]} */
   const failures = [];
-  /** @type {string[]} */
-  const notes = [];
 
   // ── 零级：空清单不是成功 ──────────────────────────────────────────
   // 「每条 URL 都有下落」在零 URL 时自动成立，但那意味着要部署一个空目录。
@@ -127,75 +272,26 @@ export function assessCompleteness({ refs, entries, rejected = [], configuredPla
   }
 
   // ── 一级：每条 URL 都必须有下落 ────────────────────────────────────
-  const entryUrls = new Set(entries.map((e) => e?.url).filter(Boolean));
   const rejectedUrls = new Map(rejected.map((r) => [r.url, r.reason]));
-
-  for (const ref of refs) {
-    if (entryUrls.has(ref.url)) continue;
-
-    const reason = rejectedUrls.get(ref.url);
-    if (reason !== undefined) {
-      // 有下落，但下落本身可能是不可接受的（缺凭据、网络失败）。
-      if (!isAcceptableRejection(reason)) {
-        failures.push(`${ref.url}: 被拒绝且不可接受 —— ${reason}`);
-      }
-      continue;
-    }
-
-    // 无下落：说清楚是因为缺凭据，还是纯粹丢了。
-    if (ref.platform === null) {
-      failures.push(`${ref.url}: 无法识别的仓库地址（既没进条目也没被拒绝）`);
-    } else if (NEEDS_TOKEN.has(ref.platform) && !configuredPlatforms.has(ref.platform)) {
-      failures.push(
-        `${ref.url}: 需要 ${ref.platform} 的访问令牌，当前未配置（见 .env.example）`,
-      );
-    } else {
-      failures.push(`${ref.url}: 丢失 —— 既没产出条目，也没有拒绝原因`);
-    }
-  }
+  failures.push(...checkEveryUrlHasFate(refs, entries, rejectedUrls, configuredPlatforms));
 
   // ── 二级：每个 entry 的字段 ────────────────────────────────────────
-  for (const entry of entries) {
-    const label = entry?.url ?? '(无 url 的条目)';
+  const fields = checkEntryFields(entries);
+  failures.push(...fields.failures);
 
-    for (const field of REQUIRED_FIELDS) {
-      const value = entry?.[field];
-      if (typeof value !== 'string' || value.trim() === '') {
-        failures.push(`${label}: 必需字段 ${field} 为空`);
-      }
-    }
+  const status = computeStatus(failures, fields.notes);
+  return { status, failures, notes: fields.notes };
+}
 
-    for (const field of DEGRADABLE_FIELDS) {
-      const value = entry?.[field];
-      const empty =
-        value === null ||
-        value === undefined ||
-        (Array.isArray(value) && value.length === 0) ||
-        (typeof value === 'string' && value.trim() === '');
-      if (!empty) continue;
-
-      const reason = entry?.reasons?.[field];
-      if (typeof reason === 'string' && reason.trim() !== '') {
-        // 带 `*-fetch-failed:` 前缀的原因说明「不是没有，是没抓到」——
-        // 与缺令牌、限流同类，属于配置/网络问题，必须阻塞。
-        if (/fetch-failed:/i.test(reason)) {
-          failures.push(`${label}: ${field} 抓取失败（${reason}）`);
-        } else {
-          notes.push(`${label}: ${field} 缺失（${reason}）`);
-        }
-      } else {
-        failures.push(`${label}: ${field} 为空且没有说明原因（裸 null 与抓取失败无法区分）`);
-      }
-    }
-
-    // 最后提交时间不能用 pushed_at 顶替：页面上的日期无法分辨真假。
-    if (entry?.lastCommitProvenance === 'pushed-at') {
-      failures.push(`${label}: lastCommit 用了 pushed_at 顶替，不是真实提交时间`);
-    }
-  }
-
-  const status = failures.length > 0 ? 'broken' : notes.length > 0 ? 'degraded' : 'complete';
-  return { status, failures, notes };
+/**
+ * 裁决结论：有阻塞就是 broken，只有降级就是 degraded，都没有才 complete。
+ * @param {readonly string[]} failures @param {readonly string[]} notes
+ * @returns {Verdict['status']}
+ */
+function computeStatus(failures, notes) {
+  if (failures.length > 0) return 'broken';
+  if (notes.length > 0) return 'degraded';
+  return 'complete';
 }
 
 /**

@@ -35,20 +35,26 @@ async function commitDateViaAgCli(ref) {
   return first?.date ?? first?.committedDate ?? null;
 }
 
+/** 单个补齐请求的超时。与 contributors.mjs 的 TIMEOUT_MS 同口径。 */
+const TIMEOUT_MS = 12000;
+
 /**
- * @param {string} url
- * @param {Record<string,string>} [headers]
- * @returns {Promise<any>}
- */
-/**
+ * GET + JSON。带超时——没有它，一个挂住的 TCP 连接会把 CI 拖到
+ * job 超时（15 分钟），而不是让 enrich 快速失败、保留原值继续。
  * @param {string} url
  * @param {Record<string,string>} [headers]
  * @returns {Promise<any>}
  */
 async function j(url, headers = {}) {
-  const r = await fetch(url, { headers: { ...UA, ...headers } });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  return r.json();
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  try {
+    const r = await fetch(url, { headers: { ...UA, ...headers }, signal: ctrl.signal });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } finally {
+    clearTimeout(t);
+  }
 }
 
 // ── 最后 commit 时间 ────────────────────────────────────────────────────────
@@ -178,29 +184,50 @@ async function probeBitbucketLicense(owner, repo) {
   return null;
 }
 
-/** 从 LICENSE 正文首段识别 SPDX 标识。只认确定无疑的几种，认不出就返回 null。 */
 /**
+ * LICENSE 正文的识别规则表。顺序即优先级——见 identifyLicense 的注释。
+ * 第三项是可选的「同时必须出现」的第二个正则，用于区分共用同一段
+ * 措辞的变体（GPL v2/v3、BSD 二/三条款）。
+ * @type {[RegExp, string, RegExp?][]}
+ */
+const LICENSE_SIGNATURES = [
+  [/Apache License\s*,?\s*Version 2\.0/i, 'Apache-2.0'],
+  [/GNU AFFERO GENERAL PUBLIC LICENSE/i, 'AGPL-3.0'],
+  [/GNU LESSER GENERAL PUBLIC LICENSE/i, 'LGPL-3.0', /Version 3/i],
+  [/GNU LESSER GENERAL PUBLIC LICENSE/i, 'LGPL-2.1'],
+  [/GNU GENERAL PUBLIC LICENSE/i, 'GPL-3.0', /Version 3/i],
+  [/GNU GENERAL PUBLIC LICENSE/i, 'GPL-2.0'],
+  [/BSD 3-Clause/i, 'BSD-3-Clause'],
+  [/Redistribution and use in source and binary forms/i, 'BSD-3-Clause', /Neither the name/i],
+  [/BSD 2-Clause/i, 'BSD-2-Clause'],
+  [/Mozilla Public License\s*Version 2\.0/i, 'MPL-2.0'],
+  [/The Unlicense/i, 'Unlicense'],
+  [/This is free and unencumbered software/i, 'Unlicense'],
+  [/ISC License/i, 'ISC'],
+  [/MIT License/i, 'MIT'],
+  [/Permission is hereby granted, free of charge/i, 'MIT', /MIT/],
+];
+
+/**
+ * 从 LICENSE 正文首段识别 SPDX 标识。只认确定无疑的几种，认不出就返回 null。
+ *
+ * 规则按「先特殊后一般」排列：AGPL/LGPL 必须先于 GPL 判断，否则
+ * "GNU AFFERO GENERAL PUBLIC LICENSE" 会被更宽的 GPL 正则吃掉，
+ * 报成 GPL-3.0。BSD-3 也要先于 BSD-2，因为 BSD-3 的正文同样含
+ * "Redistribution and use in source and binary forms"。
+ *
  * @param {string} text LICENSE 文件正文
  * @returns {string|null} SPDX 标识，认不出返回 null
  */
-/** @param {string} text @returns {string|null} */
 export function identifyLicense(text) {
   const head = text.slice(0, 1200);
-  /** @param {RegExp} re */
+  /** @type {(re:RegExp) => boolean} */
   const has = (re) => re.test(head);
-  if (has(/Apache License\s*,?\s*Version 2\.0/i)) return 'Apache-2.0';
-  if (has(/MIT License/i) || (has(/Permission is hereby granted, free of charge/i) && has(/MIT/))) return 'MIT';
-  if (has(/GNU AFFERO GENERAL PUBLIC LICENSE/i)) return 'AGPL-3.0';
-  if (has(/GNU LESSER GENERAL PUBLIC LICENSE/i)) return has(/Version 3/i) ? 'LGPL-3.0' : 'LGPL-2.1';
-  if (has(/GNU GENERAL PUBLIC LICENSE/i)) {
-    if (has(/Version 3/i)) return 'GPL-3.0';
-    if (has(/Version 2/i)) return 'GPL-2.0';
+
+  for (const [primary, id, required] of LICENSE_SIGNATURES) {
+    if (has(primary) && (!required || has(required))) return id;
   }
-  if (has(/BSD 3-Clause/i) || has(/Redistribution and use in source and binary forms/i) && has(/Neither the name/i)) return 'BSD-3-Clause';
-  if (has(/BSD 2-Clause/i)) return 'BSD-2-Clause';
-  if (has(/Mozilla Public License\s*Version 2\.0/i)) return 'MPL-2.0';
-  if (has(/The Unlicense/i) || has(/This is free and unencumbered software/i)) return 'Unlicense';
-  if (has(/ISC License/i)) return 'ISC';
+  // 最后一条兜底：整个文件只有 "MIT" 一个词（某些仓的 LICENSE 就一行）。
   if (/^\s*MIT\s*$/im.test(head)) return 'MIT';
   return null;
 }
@@ -208,8 +235,7 @@ export function identifyLicense(text) {
 /**
  * 补齐单个条目的 lastCommit 与 license。
  * 失败不抛：补不上就保留原值，不因为补充失败而丢掉条目本身。
- */
-/**
+ *
  * @param {Record<string,any>} entry catalogue 条目
  * @param {{platform:string, owner:string, repo:string, url:string}} ref
  * @param {{tokens?:Record<string,string>}} [options]

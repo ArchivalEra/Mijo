@@ -10,6 +10,8 @@
 //     node 4554。不再把「page1 的数」或其它口径当总数。
 //   · people 最多 maxPeople 个，按贡献排序；字段白名单 login/avatar/url
 //   · 拿不到就 null（页面静默忽略，不显示错误）
+//   · 适配器内部失败（网络/限流/缺令牌）**抛出**，不吞成 null —— 见下方
+//     contributors() 的注释：吞掉会把「没抓到」伪装成「没有贡献者」。
 //
 // 隐私边界（硬）：GitLab/Gitee 的 contributors 端点返回**明文 email**，
 // 本模块只挑白名单字段，email 一律不读出、不返回、不落盘。
@@ -24,8 +26,26 @@ const run = promisify(execFile);
 const UA = { 'User-Agent': 'mijo-catalogue' };
 const TIMEOUT_MS = 12000;
 const PAGE_SIZE = 100;
-const MAX_PAGES = 20;          // 2000 人上限，防异常仓打爆速率
 const MAX_PEOPLE = 100;        // 框内最多 4 页 × 25 人
+
+/** 每 10 个人串行一次，避免连发 100 次被 429。 @param {number} i */
+function throttle(i) {
+  return i > 0 && i % 10 === 0 ? new Promise((res) => setTimeout(res, 120)) : Promise.resolve();
+}
+
+/**
+ * 拼查询串：空 token 时返回空串，否则返回带前导分隔符的一段。
+ * 这样调用点不必写 `${qs ? `&${qs}` : ''}` —— 嵌套模板字符串读起来
+ * 分不清哪层负责分隔符，而 Gitee 的分隔符正好两种都用到
+ * （contributors 端点已带 `?`，users 端点没有）。
+ * @param {string|undefined} token
+ * @param {string} name 参数名
+ * @param {'?'|'&'} sep
+ */
+function authQuery(token, name, sep) {
+  if (!token) return '';
+  return `${sep}${name}=${encodeURIComponent(token)}`;
+}
 
 /**
  * GET + JSON。429/403（限流）退避重试一次；仍失败就返回 ok:false，
@@ -39,13 +59,17 @@ async function j(url, headers = {}, attempt = 1) {
     const r = await fetch(url, { headers: { ...UA, ...headers }, signal: ctrl.signal });
     if ((r.status === 429 || r.status === 403) && attempt === 1) {
       clearTimeout(t);
-      await new Promise(res => setTimeout(res, 1500));
+      await new Promise((res) => setTimeout(res, 1500));
       return j(url, headers, 2);
     }
     if (!r.ok) return { ok: false, status: r.status, headers: r.headers, data: null };
     const ct = r.headers.get('content-type') || '';
-    return { ok: true, status: r.status, headers: r.headers,
-             data: ct.includes('json') ? await r.json() : null };
+    return {
+      ok: true,
+      status: r.status,
+      headers: r.headers,
+      data: ct.includes('json') ? await r.json() : null,
+    };
   } catch {
     return { ok: false, status: 0, headers: null, data: null };
   } finally {
@@ -117,17 +141,8 @@ async function gitlab(ref, maxPeople) {
   // 全员查头像（不按位次跳过 —— 跳过的位在页面上会静默变成首字母）。
   // 逐人一次请求，串行 + 轻节流，避免 100 次连发被 429。
   for (const [i, c] of r.data.slice(0, maxPeople).entries()) {
-    const name = c.name || null;
-    if (i > 0 && i % 10 === 0) await new Promise(res => setTimeout(res, 120));
-    // email 只在这里用于猜 username，绝不写进返回值或 catalogue
-    const local = String(c.email || '').split('@')[0];
-    let avatar = null, url = null;
-    if (local) {
-      const u = await j(`https://gitlab.com/api/v4/users?username=${encodeURIComponent(local)}`);
-      const hit = Array.isArray(u.data) ? u.data[0] : null;
-      if (hit) { avatar = hit.avatar_url || null; url = hit.web_url || null; }
-    }
-    people.push({ login: name, avatar, url });
+    await throttle(i);
+    people.push({ login: c.name || null, ...(await gitlabUser(c.email)) });
   }
 
   // 总数：x-total 头（实测 gitlab-runner 247，与逐页数一致）
@@ -137,7 +152,22 @@ async function gitlab(ref, maxPeople) {
 }
 
 /**
- * Gitee：忽略 page 参数（page=1/2/3 同一批），只取第一页，total 报 null。
+ * 用 email 的本地部分猜 username，查公开账号拿头像与主页。
+ * email 只在这里读一次，绝不写进返回值或 catalogue。
+ * @param {string} [email]
+ * @returns {Promise<{avatar:string|null, url:string|null}>}
+ */
+async function gitlabUser(email) {
+  const local = String(email || '').split('@')[0];
+  if (!local) return { avatar: null, url: null };
+  const u = await j(`https://gitlab.com/api/v4/users?username=${encodeURIComponent(local)}`);
+  const hit = Array.isArray(u.data) ? u.data[0] : null;
+  if (!hit) return { avatar: null, url: null };
+  return { avatar: hit.avatar_url || null, url: hit.web_url || null };
+}
+
+/**
+ * Gitee：忽略 page 参数（page=1/2/3 同一批），只取第一页。
  * 但 contributors 的 `name` 常常就是 Gitee username（sunfei、sunjiakun），
  * 查公开的 /users/{name} 可拿到真实头像 + 人物主页；查不到就退首字母。
  * email 只在这里读一次用于判空，绝不外泄。
@@ -147,28 +177,22 @@ async function gitee(ref, maxPeople, token) {
   // contributors 端点已有 `?per_page=`，追加用 `&`；users 端点没有其他参数，
   // 必须从 `?` 起 —— 拼错会变成 `/users/name&access_token=...`（实测被解析
   // 成用户名的一部分，返回空，头像于是静默全空）。
-  const qs = token ? `access_token=${encodeURIComponent(token)}` : '';
-  const url = `https://gitee.com/api/v5/repos/${ref.owner}/${ref.repo}/contributors?per_page=${Math.min(maxPeople, PAGE_SIZE)}${qs ? `&${qs}` : ''}`;
+  const perPage = Math.min(maxPeople, PAGE_SIZE);
+  const url = `https://gitee.com/api/v5/repos/${ref.owner}/${ref.repo}/contributors`
+    + `?per_page=${perPage}${authQuery(token, 'access_token', '&')}`;
   const r = await j(url);
   if (!r.ok || !Array.isArray(r.data)) {
-    throw new Error(`gitee contributors HTTP ${r.status}${token ? '' : '（未提供 MJ_GITEE_TOKEN）'}`);
+    const hint = token ? '' : '（未提供 MJ_GITEE_TOKEN）';
+    throw new Error(`gitee contributors HTTP ${r.status}${hint}`);
   }
 
   /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
   const people = [];
   for (const [i, c] of r.data.slice(0, maxPeople).entries()) {
     const name = c.name || null;
-    let avatar = null, profile = null;
-    if (i > 0 && i % 10 === 0) await new Promise(res => setTimeout(res, 120));
-    if (name && /^[A-Za-z0-9_.-]+$/.test(name)) {
-      const u = await j(
-        `https://gitee.com/api/v5/users/${encodeURIComponent(name)}${qs ? `?${qs}` : ''}`,
-      );
-      const hit = u.data && !u.data.message ? u.data : null;
-      if (hit) { avatar = hit.avatar_url || null; profile = hit.html_url || null; }
-    }
+    await throttle(i);
     // 查得到账号才给链接；两个「字母哥」查不到就没有 url —— 符合预期
-    people.push({ login: name, avatar, url: profile });
+    people.push({ login: name, ...(await giteeUser(name, token)) });
   }
   // 总数：Gitee 的 contributors 端点**忽略分页参数**（实测 page=1 与 page=2
   // 返回同一批 1441 条全量数据），所以 r.data 就是全部贡献者 —— 长度即精确总数。
@@ -176,8 +200,28 @@ async function gitee(ref, maxPeople, token) {
   return { total: r.data.length, people };
 }
 
-/** Bitbucket：无 contributors 端点，聚合最近 commits 的作者（近似，不谎报总数）。
- *  @param {{owner:string,repo:string}} ref @param {number} maxPeople */
+/**
+ * Gitee 的 name 常常就是 username，查公开账号补头像与主页。
+ * 只接受形如合法用户名的 name，避免把中文昵称当路径去请求。
+ * @param {string|null} name @param {string} [token]
+ * @returns {Promise<{avatar:string|null, url:string|null}>}
+ */
+async function giteeUser(name, token) {
+  if (!name || !/^[A-Za-z0-9_.-]+$/.test(name)) return { avatar: null, url: null };
+  const u = await j(
+    `https://gitee.com/api/v5/users/${encodeURIComponent(name)}${authQuery(token, 'access_token', '?')}`,
+  );
+  const hit = u.data && !u.data.message ? u.data : null;
+  if (!hit) return { avatar: null, url: null };
+  return { avatar: hit.avatar_url || null, url: hit.html_url || null };
+}
+
+/**
+ * Bitbucket：无 contributors 端点，聚合最近 commits 的作者（近似，不谎报总数）。
+ * 聚合出来的是「提交作者数」，不是贡献者人数：同一个人换邮箱就是两行，
+ * 而从未提交的贡献者根本不出现。所以标 noInfer，total 恒为 null。
+ * @param {{owner:string,repo:string}} ref @param {number} maxPeople
+ */
 async function bitbucket(ref, maxPeople) {
   const base = `https://api.bitbucket.org/2.0/repositories/${ref.owner}/${ref.repo}`;
   const seen = new Map();
@@ -198,7 +242,7 @@ async function bitbucket(ref, maxPeople) {
     if (r.data.values.length < PAGE_SIZE) break;
   }
   if (!seen.size) return null;
-  return { total: null, people: [...seen.values()] };
+  return { total: null, people: [...seen.values()], noInfer: true };
 }
 
 /**
@@ -234,22 +278,32 @@ async function gitcode(ref, maxPeople) {
   if (!Array.isArray(list) || !list.length) return null;
 
   for (const [i, c] of list.slice(0, maxPeople).entries()) {
-    const name = c.name || null;
-    let avatar = null, url = null;
-    if (i > 0 && i % 10 === 0) await new Promise(res => setTimeout(res, 120));
-    if (name) {
-      try {
-        const u = await ag(['api', `/users/${encodeURIComponent(name)}`, '--raw-output']);
-        if (u && !u.message) { avatar = u.avatar_url || null; url = u.html_url || null; }
-      } catch { /* 查不到就退首字母，不伪造 */ }
-    }
-    people.push({ login: name, avatar, url });
+    await throttle(i);
+    people.push({ login: c.name || null, ...(await gitcodeUser(ag, c.name)) });
   }
 
   // 总数：GitCode 的 v5 API **忽略 per_page**（实测 per_page=1 与 =100 返回同一批
   // 全量数据），所以这次请求拿到的就是全部贡献者 —— `list.length` 是精确总数，
   // 不再是「至少这么多」。
   return { total: list.length, people };
+}
+
+/**
+ * 查 GitCode/AtomGit 的单人账号信息。
+ * @param {(args:string[]) => Promise<any>} ag
+ * @param {string|null} name
+ * @returns {Promise<{avatar:string|null, url:string|null}>}
+ */
+async function gitcodeUser(ag, name) {
+  if (!name) return { avatar: null, url: null };
+  try {
+    const u = await ag(['api', `/users/${encodeURIComponent(name)}`, '--raw-output']);
+    if (!u || u.message) return { avatar: null, url: null };
+    return { avatar: u.avatar_url || null, url: u.html_url || null };
+  } catch {
+    // 查不到就退首字母，不伪造
+    return { avatar: null, url: null };
+  }
 }
 
 /**
@@ -291,32 +345,45 @@ const ADAPTERS = { github, gitlab, gitee, bitbucket, gitcode, cnb };
 
 /**
  * 唯一的外部接口。
+ *
+ * 失败语义分三种，不能混：
+ *   · 平台不支持 contributors → null（页面就不该显示那一列内容）
+ *   · 仓库确实没有贡献者     → null（空 people，是仓库事实）
+ *   · 抓取失败（网络/限流/缺令牌）→ **抛出**，由调用方记成
+ *     `contributor-fetch-failed:` 原因、被判据阻塞
+ *
+ * 第三种以前被一个裸 `catch { return null }` 吞掉，结果「没抓到」在
+ * catalogue 里长得和「没有贡献者」一模一样 —— 那是一个可接受的降级，
+ * 于是真 bug 被藏了起来（2026-11-18 的 CNB top-10 就是这么藏的）。
+ * 抛出去之后，缺令牌/限流会让 CI 红，而不是安静地少一列。
+ *
  * @param {SupportedPlatform} platform
  * @param {{owner:string,repo:string}} ref
  * @param {{maxPeople?:number, token?:string}} [options]
  * @returns {Promise<{total:number|null, people:{login:string|null,avatar:string|null,url:string|null}[]}|null>}
  */
 export async function contributors(platform, ref, { maxPeople = MAX_PEOPLE, token } = {}) {
-  /** @type {((ref:{owner:string,repo:string}, max:number, token?:string)=>Promise<any>)|undefined} */
   const adapter = /** @type {Record<string, any>} */ (ADAPTERS)[platform];
   if (!adapter) return null;
-  try {
-    const out = await adapter(ref, maxPeople, token);
-    if (!out?.people?.length) return null;
-    // 总数回退：平台不给总数时，若请求 100 条只回来 N<100 条，
-    // 说明这就是全部贡献者（各平台均按贡献降序返回）⇒ total = N。
-    // 取满 100 说明还有更多，此时才保持 null（不谎报精确数）。
-    const asked = Math.min(maxPeople, PAGE_SIZE);
-    const inferred = !out.noInfer && out.people.length < asked ? out.people.length : null;
-    return {
-      total: Number.isFinite(out.total) ? out.total : inferred,
-      people: out.people.map((/** @type {any} */ p) => ({
-        login: p.login || null,
-        avatar: p.avatar || null,
-        url: p.url || null,
-      })),
-    };
-  } catch {
-    return null;
-  }
+
+  const out = await adapter(ref, maxPeople, token);
+  if (!out?.people?.length) return null;
+
+  // 总数回退：平台不给总数时，若请求 100 条只回来 N<100 条，
+  // 说明这就是全部贡献者（各平台均按贡献降序返回）⇒ total = N。
+  // 取满 100 说明还有更多，此时才保持 null（不谎报精确数）。
+  // noInfer 的适配器（Bitbucket 的提交作者、CNB 的活跃排行）不参与推断：
+  // 它们的长度不是人数口径，推断出来就是一个假数。
+  const asked = Math.min(maxPeople, PAGE_SIZE);
+  const complete = out.people.length < asked;
+  const inferred = !out.noInfer && complete ? out.people.length : null;
+
+  return {
+    total: Number.isFinite(out.total) ? out.total : inferred,
+    people: out.people.map((/** @type {any} */ p) => ({
+      login: p.login || null,
+      avatar: p.avatar || null,
+      url: p.url || null,
+    })),
+  };
 }

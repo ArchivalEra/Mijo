@@ -19,21 +19,15 @@
  */
 
 const TILE = 40;          // 平铺头像边长
-const GAP = 6;            // 平铺间距（固定，不随数量变）
 const PAGE_SIZE = 25;     // 大框每页最多 25 人
 const MAX_COLS = 5;       // 网格最多 5 列（1×1 ~ 5×5）
-
-/** HTML 转义。 @param {unknown} v */
-const ESC_MAP = /** @type {Record<string,string>} */ ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' });
-const esc = /** @param {unknown} v */ (v) => String(v ?? '').replace(/[&<>"']/g, (/** @type {string} */ c) => ESC_MAP[c] ?? c);
 
 /**
  * 一张脸：统一建 <a>（无 url 时不设 href），有头像用外链 img
  * （懒加载交给 reveal），没有就首字母。加载失败退首字母。
  * @param {{login?:string|null, avatar?:string|null, url?:string|null}} person
  * @returns {HTMLAnchorElement}
- */
-function face(person) {
+ */function face(person) {
   const name = person.login || '';
   const ch = name.trim().charAt(0);
   const initial = ch ? ch.toUpperCase() : '·';
@@ -80,10 +74,9 @@ function reveal(root) {
 /**
  * 大框：把 people 切成页，按当页人数决定网格列数（1×1 ~ 5×5）。
  * @param {{login?:string|null, avatar?:string|null, url?:string|null}[]} people
- * @param {HTMLElement} host 泡泡元素（大框挂在它里面）
  * @returns {HTMLElement|null}
  */
-function createPanel(people, host) {
+function createPanel(people) {
   /** @type {{login?:string|null, avatar?:string|null, url?:string|null}[][]} */
   const pages = [];
   for (let i = 0; i < people.length; i += PAGE_SIZE) {
@@ -199,7 +192,7 @@ export function createFaceGrid({ people, total, label = 'contributors' }) {
     bubble.title = `${total} ${label}`;
     bubble.setAttribute('aria-label', `${total} ${label}`);
 
-    const panel = createPanel(people, bubble);
+    const panel = createPanel(people);
     if (panel) {
       bubble.appendChild(panel);
 

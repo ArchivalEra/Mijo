@@ -1,8 +1,5 @@
 import { createFaceGrid } from './face-grid.js';
-
-/** HTML escape for any catalogue field. @param {unknown} v */
-const ESC_MAP = /** @type {Record<string,string>} */ ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' });
-const esc = /** @param {unknown} v */ (v) => String(v ?? '').replace(/[&<>"']/g, (/** @type {string} */ c) => ESC_MAP[c] ?? c);
+import { esc, fallbackRowHtml, rowCellsHtml } from './format.js';
 
 /**
  * One row of catalogue.json.
@@ -19,78 +16,95 @@ const esc = /** @param {unknown} v */ (v) => String(v ?? '').replace(/[&<>"']/g,
  * @property {number} [contributorTotal]
  */
 
+/**
+ * 维护者单元格：单个头像 + 该平台的人物主页链接。
+ * 统一建 <a>，无 profile 不设 href；头像加载失败退首字母。
+ * @param {Entry} e
+ * @returns {HTMLAnchorElement}
+ */
+function ownerCell(e) {
+  const owner = document.createElement('a');
+  owner.className = 'face owner-face';
+  owner.title = e.maintainer ?? '';
+  if (e.profile) {
+    owner.href = e.profile;
+    owner.target = '_blank';
+    owner.rel = 'noopener';
+  }
+  const initial = (e.maintainer || '?').trim().charAt(0).toUpperCase();
+  if (!e.avatar) {
+    owner.textContent = initial;
+    return owner;
+  }
+  const img = new Image();
+  img.alt = '';
+  img.referrerPolicy = 'no-referrer';
+  img.loading = 'lazy';
+  img.onerror = () => { img.remove(); owner.textContent = initial; };
+  img.src = e.avatar;
+  owner.appendChild(img);
+  return owner;
+}
+
+/**
+ * 建一整行。单个条目出错只影响这一行——外层的 try/catch 是最后一道
+ * 保险，正常路径不该靠它。
+ * @param {Entry} e
+ * @returns {HTMLTableRowElement}
+ */
+function buildRow(e) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = rowCellsHtml(e);
+
+  tr.children[1]?.appendChild(ownerCell(e));
+
+  // Contributors：整个交互藏在 FaceGrid 模块里，这里只有一行
+  const cs = e.contributors ?? [];
+  if (cs.length) {
+    tr.children[2]?.appendChild(createFaceGrid({
+      people: cs,
+      total: typeof e.contributorTotal === 'number' ? e.contributorTotal : null,
+    }));
+  }
+  return tr;
+}
+
+/**
+ * 一行坏数据不该让整张表消失：渲染失败时退化成一条只有链接的窄行，
+ * 并在控制台留下原因。
+ * @param {Entry} e @returns {HTMLTableRowElement}
+ */
+function fallbackRow(e) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = fallbackRowHtml(e);
+  return tr;
+}
+
+/** @param {HTMLElement} rows @param {Entry[]} entries */
+function renderRows(rows, entries) {
+  if (!entries.length) {
+    rows.innerHTML =
+      '<tr><td colspan="6" class="empty">暂无条目 —— 往 material/urls.txt 里粘一个 URL。</td></tr>';
+    return;
+  }
+  rows.innerHTML = '';
+  for (const e of entries) {
+    try {
+      rows.appendChild(buildRow(e));
+    } catch (err) {
+      console.error('catalogue row failed:', e?.url, err);
+      rows.appendChild(fallbackRow(e));
+    }
+  }
+}
+
 async function main() {
   const res = await fetch('catalogue.json');
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const d = /** @type {{entries?: Entry[], generatedAt?: string}} */ (await res.json());
-  const entries = d.entries ?? [];
   const rows = /** @type {HTMLElement} */ (document.getElementById('rows'));
 
-  if (!entries.length) {
-    rows.innerHTML =
-      '<tr><td colspan="6" class="empty">暂无条目 —— 往 material/urls.txt 里粘一个 URL。</td></tr>';
-  } else {
-    rows.innerHTML = '';
-    for (const e of entries) {
-      const tr = document.createElement('tr');
-      const date = e.lastCommit ? new Date(e.lastCommit).toISOString().slice(0, 10) : '—';
-
-      // 仓库名后面跟来源域名：同名仓库在不同平台上（两个 mindspore：GitCode 与
-      // Gitee）仅看名字无法区分，而链接文字是仓名不是域名。域名是唯一能一眼分辨
-      // 的平台事实，且不额外请求数据。
-      let host = '';
-      try {
-        host = new URL(e.url).hostname.replace(/^www\./, '');
-      } catch {
-        host = '';
-      }
-      const hostTag = host
-        ? `<span class="repo-host">${esc(host)}</span>`
-        : '';
-
-      tr.innerHTML =
-        `<td><a class="repo" href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.name)}</a>${hostTag}</td>` +
-        `<td></td>` +
-        `<td></td>` +
-        `<td class="desc">${esc(e.description ?? '—')}</td>` +
-        `<td class="num">${esc(date)}</td>` +
-        `<td class="lic">${esc(e.license ?? '—')}</td>`;
-
-      // 维护者：单个头像 + 该平台的人物主页链接（统一建 <a>，无 profile 不设 href）
-      const owner = document.createElement('a');
-      owner.className = 'face owner-face';
-      owner.title = e.maintainer ?? '';
-      if (e.profile) {
-        owner.href = e.profile;
-        owner.target = '_blank';
-        owner.rel = 'noopener';
-      }
-      const initial = (e.maintainer || '?').trim().charAt(0).toUpperCase();
-      if (e.avatar) {
-        const img = new Image();
-        img.alt = '';
-        img.referrerPolicy = 'no-referrer';
-        img.loading = 'lazy';
-        img.onerror = () => { img.remove(); owner.textContent = initial; };
-        img.src = e.avatar;
-        owner.appendChild(img);
-      } else {
-        owner.textContent = initial;
-      }
-      tr.children[1]?.appendChild(owner);
-
-      // Contributors：整个交互藏在 FaceGrid 模块里，这里只有一行
-      const cs = e.contributors ?? [];
-      if (cs.length) {
-        tr.children[2]?.appendChild(createFaceGrid({
-          people: cs,
-          total: typeof e.contributorTotal === 'number' ? e.contributorTotal : null,
-        }));
-      }
-
-      rows.appendChild(tr);
-    }
-  }
+  renderRows(rows, d.entries ?? []);
 
   const stamp = document.getElementById('stamp');
   if (stamp && d.generatedAt) {

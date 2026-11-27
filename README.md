@@ -41,9 +41,14 @@ GitLab / Bitbucket 的仓库对象没有 license 字段，回退到读 LICENSE �
 
 ```bash
 npm ci
-node scripts/generate-catalogue.mjs   # 本地派生（有 ag-cli 登录态或相应 token）
-python3 -m http.server -d site 8000   # 预览
+npm run check                        # lint + typecheck + tests，提交前跑这个
+node scripts/generate-catalogue.mjs  # 本地派生（有 ag-cli 登录态或相应 token）
+python3 -m http.server -d site 8000  # 预览
 ```
+
+`npm run lint` 跑 ESLint + `eslint-plugin-sonarjs`。它启用的规则与 GitRoll
+扫描报告的是同一套（认知复杂度 ≤ 15、禁止嵌套模板字符串、禁止嵌套三元），
+所以这类问题在本地就红，不用等下一轮扫描才发现。
 
 ## License
 

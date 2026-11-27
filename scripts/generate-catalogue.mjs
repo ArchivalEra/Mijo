@@ -118,7 +118,6 @@ async function viaAgCli(ref) {
 }
 
 /** @returns {{tokens:Record<string,string>, status:Record<string,string>}} */
-/** @returns {{tokens:Record<string,string>, status:Record<string,string>}} */
 function sdkTokens() {
   /** @type {Record<string,string>} */
   const tokens = {};
@@ -134,30 +133,149 @@ function sdkTokens() {
   return { tokens, status };
 }
 
+/**
+ * GitLab 返回的头像是相对路径（/uploads/...），补上 host。
+ * 其余平台给的是绝对 URL，原样返回。
+ * @param {string} platform @param {string|null} avatar
+ * @returns {string|null}
+ */
+function absoluteAvatar(platform, avatar) {
+  if (!avatar?.startsWith('/')) return avatar;
+  return (platform === 'gitlab' ? 'https://gitlab.com' : '') + avatar;
+}
+
+/**
+ * 走 SDK 的平台：把仓库对象映射成 catalogue 条目。
+ * @param {any} r SDK 的仓库对象
+ * @param {{platform:string, owner:string, repo:string, url:string}} ref
+ * @returns {Record<string,any>}
+ */
+function entryFromSdk(r, ref) {
+  /** @type {{username?:string, login?:string, avatarUrl?:string, htmlUrl?:string}|null|undefined} */
+  const sdkOwner = r.owner;
+  const ow = sdkOwner ?? {};
+  return {
+    name: r.name,
+    maintainer: ow.username ?? ow.login ?? ref.owner,
+    // 不再用 pushedAt/updatedAt 顶替：那不是最后提交时间，页面上的
+    // 日期无法分辨真假。拿不到就留空 + 由 enrich 补真值，补不到
+    // 就带 reason（见 buildReasons）。
+    lastCommit: null,
+    license: r.license ?? null,
+    description: r.description || null,
+    avatar: absoluteAvatar(ref.platform, ow.avatarUrl ?? null),
+    profile: ow.htmlUrl ?? null,
+    url: ref.url,
+  };
+}
+
+/**
+ * 装配「字段为什么是空的」。缺失必须带原因，否则判据无法区分
+ * 「平台不提供」与「抓取失败」。原因的来源只有两处：平台能力
+ * （PLATFORM_LIMITS）与仓库内容事实。
+ * @param {Record<string,any>} merged
+ * @param {{people?:any[], total?:number|null}|null} contrib
+ * @param {string|null} contribFailure
+ * @returns {Record<string,string>}
+ */
+function buildReasons(merged, contrib, contribFailure) {
+  /** @type {Record<string,string>} */
+  const reasons = {};
+  if (!merged.lastCommit) reasons.lastCommit = PLATFORM_LIMITS.lastCommitAbsent;
+  if (!merged.license) reasons.license = PLATFORM_LIMITS.licenseAbsent;
+  if (!merged.description) reasons.description = PLATFORM_LIMITS.descriptionAbsent;
+  // 维护者的头像/主页来自各平台仓库对象里的 owner 结构，字段名各不相同；
+  // 平台没给就是没给（不是抓取失败），页面退首字母/无链接即可。
+  if (!merged.avatar) reasons.avatar = PLATFORM_LIMITS.ownerAvatarAbsent;
+  if (!merged.profile) reasons.profile = PLATFORM_LIMITS.ownerProfileAbsent;
+  if (!merged.maintainer) reasons.maintainer = PLATFORM_LIMITS.ownerNameAbsent;
+
+  if (!contrib) {
+    // 抓取失败（网络/限流/缺令牌）与「仓库确实没有贡献者」是两件事：
+    // 前者带 HTTP 状态等细节，会被判据当成阻塞；后者是仓库事实。
+    reasons.contributors = contribFailure
+      ? `contributor-fetch-failed: ${contribFailure}`
+      : PLATFORM_LIMITS.noContributors;
+  } else if (merged.contributorTotal === null) {
+    reasons.contributorTotal = PLATFORM_LIMITS.contributorTotalAbsent;
+  }
+  return reasons;
+}
+
+/**
+ * 派生单个条目：基础字段 → enrich 补 lastCommit/license → contributors。
+ * contributors 抛出的失败被就地记成原因（不丢、也不中断整轮）。
+ * @param {{platform:string, owner:string, repo:string, url:string}} ref
+ * @param {{sdk:any, tokens:Record<string,string>}} ctx
+ * @returns {Promise<Record<string,any>>}
+ */
+async function deriveEntry(ref, { sdk, tokens }) {
+  let base;
+  if (AG_PLATFORMS.has(ref.platform)) {
+    base = await viaAgCli(ref);
+  } else {
+    const r = await sdk.platform(/** @type {any} */ (ref.platform))
+      .repositories.get({ owner: ref.owner, repo: ref.repo });
+    base = entryFromSdk(r, ref);
+  }
+
+  const withBase = await enrich(base, ref, { tokens });
+
+  // 平铺 5 个 + 框内换页，共取 100 个头像（4 页 × 25）。
+  // 贡献者抓取失败不能静默变成「这个仓没有贡献者」——把失败原因记下来，
+  // 由 completeness 判据决定它是阻塞还是可接受。
+  /** @type {string|null} */
+  let contribFailure = null;
+  const contrib = await contributors(/** @type {any} */ (ref.platform), ref, {
+    maxPeople: 100,
+    token: tokens[ref.platform],
+  }).catch((/** @type {any} */ e) => {
+    contribFailure = String(e?.message ?? e).trim();
+    return null;
+  });
+
+  const merged = contrib
+    ? { ...withBase, contributors: contrib.people, contributorTotal: contrib.total }
+    : withBase;
+
+  return { ...merged, reasons: buildReasons(merged, contrib, contribFailure) };
+}
+
+/**
+ * 把 urls.txt 拆成「能识别的 ref」与「识别不了的原始行」。
+ * 后者也必须留下记录，否则那条 URL 就凭空消失了。
+ * @param {string} raw
+ */
+function parseInput(raw) {
+  const lines = raw.split('\n').map(s => s.trim()).filter(s => s && !s.startsWith('#'));
+  /** @type {{platform:string, owner:string, repo:string, url:string}[]} */
+  const refs = [];
+  /** @type {{line:string, ref:any}[]} */
+  const unparsed = [];
+  for (const line of lines) {
+    const ref = parseUrl(line);
+    if (ref?.platform) refs.push(/** @type {any} */ (ref));
+    else unparsed.push({ line, ref });
+  }
+  return { refs, unparsed };
+}
+
 /** @returns {Promise<void>} */
 async function main() {
   const raw = await readFile(new URL('../material/urls.txt', import.meta.url), 'utf8');
-  const refs = raw.split('\n').map(s => s.trim())
-    .filter(s => s && !s.startsWith('#'))
-    .map(parseUrl)
-    .filter(/** @returns {ref is {platform:string, owner:string, repo:string, url:string}} */ (ref) => ref !== null && ref.platform !== null);
+  const { refs, unparsed } = parseInput(raw);
 
   const { tokens, status } = sdkTokens();
   const sdk = createGitSdk(tokens);
+  /** @type {Record<string,any>[]} */
   const entries = [];
   /** @type {{url:string, reason:string}[]} */
   const rejected = [];
-  /** 解析阶段就被丢掉的行（不支持的 host、写坏的行）——它们也必须有下落。 */
-  const unparsed = raw.split('\n').map(s => s.trim())
-    .filter(s => s && !s.startsWith('#'))
-    .map(line => ({ line, ref: parseUrl(line) }))
-    .filter(({ ref }) => ref === null || ref.platform === null);
 
   console.log('ag-cli auth:', process.env.AGCLI_TOKEN ? 'AGCLI_TOKEN (isolated XDG)' : 'local login');
   console.log('sdk token source:', JSON.stringify(status));
 
   for (const { line, ref } of unparsed) {
-    // 解析失败不进 entries，但必须留下拒绝记录，否则这条 URL 就凭空消失了。
     rejected.push({
       url: line,
       reason: ref === null ? '不是可解析的仓库地址' : `不支持的平台：${line}`,
@@ -166,85 +284,7 @@ async function main() {
 
   for (const ref of refs) {
     try {
-      if (AG_PLATFORMS.has(ref.platform)) {
-        entries.push(await viaAgCli(ref));
-      } else {
-        const r = await sdk.platform(/** @type {any} */ (ref.platform)).repositories.get({ owner: ref.owner, repo: ref.repo });
-        /** @type {{username?:string, login?:string, avatarUrl?:string, htmlUrl?:string}|null|undefined} */
-        const sdkOwner = r.owner;
-        const ow = sdkOwner ?? {};
-        let avatar = ow.avatarUrl ?? null;
-        // GitLab 返回的是相对路径（/uploads/...），补 host
-        if (avatar && avatar.startsWith('/')) {
-          avatar = (ref.platform === 'gitlab' ? 'https://gitlab.com' : '') + avatar;
-        }
-        entries.push({
-          name: r.name,
-          maintainer: ow.username ?? ow.login ?? ref.owner,
-          // 不再用 pushedAt/updatedAt 顶替：那不是最后提交时间，页面上的
-          // 日期无法分辨真假。拿不到就留空 + 由 enrich 补真值，补不到
-          // 就带 reason（见下方 reasons 装配）。
-          lastCommit: null,
-          license: r.license ?? null,
-          description: r.description || null,
-          avatar,
-          profile: ow.htmlUrl ?? null,
-          url: ref.url,
-        });
-      }
-      const withBase = await enrich(entries[entries.length - 1], ref, { tokens });
-      // contributors 只取前 5 + 总数；拿不到就留空（页面不渲那一堆）
-      // 数据模块自己管分页/限流/隐私；这里只要结果。
-      // 平铺 5 个 + 框内换页，共取 100 个头像（4 页 × 25）。
-      // 贡献者抓取失败不能静默变成「这个仓没有贡献者」——把失败原因记下来，
-      // 由 completeness 判据决定它是阻塞还是可接受。
-      /** @type {string|null} */
-      let contribFailure = null;
-      const contrib = await contributors(/** @type {any} */ (ref.platform), ref, {
-        maxPeople: 100,
-        token: tokens[ref.platform],
-      }).catch((/** @type {any} */ e) => {
-        contribFailure = String(e?.message ?? e).trim();
-        return null;
-      });
-      const merged = contrib
-        ? { ...withBase, contributors: contrib.people, contributorTotal: contrib.total }
-        : withBase;
-
-      // 字段缺失必须带原因，否则判据无法区分「平台不提供」与「抓取失败」。
-      // 原因的来源只有两处：平台能力（PLATFORM_LIMITS）与仓库内容事实。
-      /** @type {Record<string,string>} */
-      const reasons = {};
-      if (!merged.lastCommit) {
-        reasons.lastCommit = PLATFORM_LIMITS.lastCommitAbsent;
-      }
-      if (!merged.license) {
-        reasons.license = PLATFORM_LIMITS.licenseAbsent;
-      }
-      if (!merged.description) {
-        reasons.description = PLATFORM_LIMITS.descriptionAbsent;
-      }
-      // 维护者的头像/主页来自各平台仓库对象里的 owner 结构，字段名各不相同；
-      // 平台没给就是没给（不是抓取失败），页面退首字母/无链接即可。
-      if (!merged.avatar) {
-        reasons.avatar = PLATFORM_LIMITS.ownerAvatarAbsent;
-      }
-      if (!merged.profile) {
-        reasons.profile = PLATFORM_LIMITS.ownerProfileAbsent;
-      }
-      if (!merged.maintainer) {
-        reasons.maintainer = PLATFORM_LIMITS.ownerNameAbsent;
-      }
-      if (!contrib) {
-        // 抓取失败（网络/限流/缺令牌）与「仓库确实没有贡献者」是两件事：
-        // 前者带 HTTP 状态等细节，会被判据当成阻塞；后者是仓库事实。
-        reasons.contributors = contribFailure
-          ? `contributor-fetch-failed: ${contribFailure}`
-          : PLATFORM_LIMITS.noContributors;
-      } else if (merged.contributorTotal === null) {
-        reasons.contributorTotal = PLATFORM_LIMITS.contributorTotalAbsent;
-      }
-      entries[entries.length - 1] = { ...merged, reasons };
+      entries.push(await deriveEntry(ref, { sdk, tokens }));
     } catch (/** @type {any} */ e) {
       // 读不到 ≠ 坏了：私有 / 无权限 / 已删除都记原因后拒绝，不产空壳条目。
       const msg = String(e?.stderr || e?.message || '').trim().split('\n').pop();

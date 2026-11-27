@@ -48,6 +48,11 @@ jobs:
 
           record 'tsc' 'tsc --noEmit (checkJs, scripts/)' "$(npx tsc --noEmit >/dev/null 2>&1; echo $?)"
 
+          # ESLint + sonarjs：把 GitRoll 的判据（认知复杂度 ≤15、嵌套模板
+          # 字符串、嵌套三元）固化成改代码时就能红的检查。此前这些只能在
+          # 扫描之后从 issue 里看到，改的时候无法自查。
+          record 'eslint' 'npx eslint .' "$(npx eslint . >/dev/null 2>&1; echo $?)"
+
           # shellcheck：既有 shell 壳（ag.sh）+ 本 workflow 提取出的 run 块
           shellcheck -S warning -s sh scripts/ag.sh > /dev/null 2>&1
           record 'shellcheck-ag' 'shellcheck scripts/ag.sh' "$?"
@@ -90,5 +95,5 @@ jobs:
           done < results.tsv
           {
             echo ""
-            echo "Only existing gates are recorded — shellcheck validates the shell shell, it is not a new lint."
+            echo "eslint+sonarjs is now a gate, not a report: its rules mirror the GitRoll scan, so a regression fails here instead of waiting for the next scan."
           } >> "$GITHUB_STEP_SUMMARY"
