@@ -28,9 +28,60 @@ const TIMEOUT_MS = 12000;
 const PAGE_SIZE = 100;
 const MAX_PEOPLE = 100;        // 框内最多 4 页 × 25 人
 
-/** 每 10 个人串行一次，避免连发 100 次被 429。 @param {number} i */
-function throttle(i) {
-  return i > 0 && i % 10 === 0 ? new Promise((res) => setTimeout(res, 120)) : Promise.resolve();
+/**
+ * 把「其实是 noreply 邮箱」的贡献者名还原成用户名。
+ *
+ * Gitee 的 contributors 端点有时把 `name` 直接填成 noreply 地址：
+ * `7347157+joylvliang@user.noreply.gitee.com`（GitHub 同款格式
+ * `12345+login@users.noreply.github.com`）。原样显示在页面上是一串噪声，
+ * 而且它虽然不含真实邮箱，仍属不该展示的形态。取 `+` 之后、`@` 之前那段。
+ *
+ * 普通名字原样返回——只有形如 noreply 地址时才改写。
+ *
+ * @param {string|null} raw
+ * @returns {string|null}
+ */
+function displayName(raw) {
+  if (!raw) return null;
+  const m = /^(?:\d+\+)?([^@\s]+)@users?\.noreply\.[\w.-]+$/i.exec(raw.trim());
+  return m ? m[1] : raw;
+}
+
+/** 逐人查询的并发上限。见 mapLimited 的注释：串行是主要耗时来源。 */
+const LOOKUP_CONCURRENCY = 5;
+
+/**
+ * 按顺序对每个元素求值，但最多同时跑 LOOKUP_CONCURRENCY 个。
+ *
+ * 为什么需要它：每个贡献者都要单独查一次账号，100 个就是 100 个串行往返。
+ * 旧代码纯串行 + 每 10 个歇 120ms，光这一项就是几分钟（实测 CI 里
+ * Derive catalogue 一步 396 秒）。并发 5 个把往返重叠起来，而 5 这个数
+ * 足够低：429 退避与 retry-after 逻辑都在 j() 里，撞限流会自己退。
+ *
+ * 结果顺序与输入一致，因为按索引写回而不是按完成顺序 push。
+ *
+ * @template T, R
+ * @param {readonly T[]} items
+ * @param {(item: T, index: number) => Promise<R>} fn
+ * @returns {Promise<R[]>}
+ */
+async function mapLimited(items, fn) {
+  /** @type {R[]} */
+  const out = new Array(items.length);
+  let next = 0;
+  /** @returns {Promise<void>} */
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await fn(items[i], i);
+    }
+  };
+  const workers = Array.from(
+    { length: Math.min(LOOKUP_CONCURRENCY, items.length) },
+    () => worker(),
+  );
+  await Promise.all(workers);
+  return out;
 }
 
 /**
@@ -176,14 +227,16 @@ async function gitlab(ref, maxPeople, token) {
   const r = await j(list, auth);
   if (!r.ok || !Array.isArray(r.data)) return null;
 
-  /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
-  const people = [];
   // 全员查头像（不按位次跳过 —— 跳过的位在页面上会静默变成首字母）。
-  // 逐人一次请求，串行 + 轻节流，避免 100 次连发被 429。
-  for (const [i, c] of r.data.slice(0, maxPeople).entries()) {
-    await throttle(i);
-    people.push({ login: c.name || null, ...(await gitlabUser(c.email, auth)) });
-  }
+  // 逐人一次请求，并发 5 个：串行跑 100 个往返是 CI 慢的主因。
+  // 一旦撞上 429 就停掉剩余查询：限流是全局状态，后面的人必然也撞。
+  let limited = false;
+  /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
+  const people = await mapLimited(r.data.slice(0, maxPeople), async (c) => {
+    const base = { login: displayName(c.name) };
+    if (limited) return { ...base, avatar: null, url: null };
+    return { ...base, ...(await gitlabUser(c.email, auth, () => { limited = true; })) };
+  });
 
   // 总数：x-total 头（实测 gitlab-runner 247，与逐页数一致）
   const probe = await j(`${base}?order_by=commits&sort=desc&per_page=1`, auth);
@@ -194,13 +247,20 @@ async function gitlab(ref, maxPeople, token) {
 /**
  * 用 email 的本地部分猜 username，查公开账号拿头像与主页。
  * email 只在这里读一次，绝不写进返回值或 catalogue。
+ *
+ * onLimited：撞到 429 时回调一次。调用方据此停掉**剩余**查询 ——
+ * 限流是按 IP/配额算的全局状态，第一个人撞墙时后面的人必然也撞，
+ * 继续跑 99 次只会白白耗时间（实测 CI 里这一步曾让本步耗时到 396 秒）。
+ *
  * @param {string} [email] @param {Record<string,string>} [auth]
+ * @param {() => void} [onLimited]
  * @returns {Promise<{avatar:string|null, url:string|null}>}
  */
-async function gitlabUser(email, auth = {}) {
+async function gitlabUser(email, auth = {}, onLimited) {
   const local = String(email || '').split('@')[0];
   if (!local) return { avatar: null, url: null };
   const u = await j(`https://gitlab.com/api/v4/users?username=${encodeURIComponent(local)}`, auth);
+  if (u.status === 429) onLimited?.();
   const hit = Array.isArray(u.data) ? u.data[0] : null;
   if (!hit) return { avatar: null, url: null };
   return { avatar: hit.avatar_url || null, url: hit.web_url || null };
@@ -227,13 +287,11 @@ async function gitee(ref, maxPeople, token) {
   }
 
   /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
-  const people = [];
-  for (const [i, c] of r.data.slice(0, maxPeople).entries()) {
-    const name = c.name || null;
-    await throttle(i);
-    // 查得到账号才给链接；两个「字母哥」查不到就没有 url —— 符合预期
-    people.push({ login: name, ...(await giteeUser(name, token)) });
-  }
+  // 查得到账号才给链接；两个「字母哥」查不到就没有 url —— 符合预期
+  const people = await mapLimited(r.data.slice(0, maxPeople), async (c) => {
+    const name = displayName(c.name);
+    return { login: name, ...(await giteeUser(name, token)) };
+  });
   // 总数：Gitee 的 contributors 端点**忽略分页参数**（实测 page=1 与 page=2
   // 返回同一批 1441 条全量数据），所以 r.data 就是全部贡献者 —— 长度即精确总数。
   // 此前报 null 是因为假设「只拿到一页」，而实际上从来就不是分页的。
@@ -338,8 +396,6 @@ async function bitbucket(ref, maxPeople) {
  */
 async function gitcode(ref, maxPeople) {
   const target = `${ref.owner}/${ref.repo}`;
-  /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
-  const people = [];
 
   // ag-cli 有 AGCLI_TOKEN 时走隔离封装，否则用本机登录态
   const binary = process.env.AGCLI_TOKEN
@@ -361,10 +417,10 @@ async function gitcode(ref, maxPeople) {
   }
   if (!Array.isArray(list) || !list.length) return null;
 
-  for (const [i, c] of list.slice(0, maxPeople).entries()) {
-    await throttle(i);
-    people.push({ login: c.name || null, ...(await gitcodeUser(ag, c.name)) });
-  }
+  const people = await mapLimited(list.slice(0, maxPeople), async (c) => ({
+    login: displayName(c.name),
+    ...(await gitcodeUser(ag, c.name)),
+  }));
 
   // 总数：GitCode 的 v5 API **忽略 per_page**（实测 per_page=1 与 =100 返回同一批
   // 全量数据），所以这次请求拿到的就是全部贡献者 —— `list.length` 是精确总数，

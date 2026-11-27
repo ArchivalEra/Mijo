@@ -106,6 +106,73 @@ test('the privacy whitelist never carries email through', async (t) => {
   assert.ok(!JSON.stringify(r).includes('secret.example'), 'email 不得出现在返回值里');
 });
 
+test('a noreply address used as a display name is reduced to the username', async (t) => {
+  // 实测 Gitee 的 contributors 会把 name 填成
+  // `7347157+joylvliang@user.noreply.gitee.com`。原样显示是一串噪声，
+  // 而且这种形态不该出现在页面上。GitHub 的 contributors 用同款格式。
+  stubFetch(t, async (url) => {
+    if (String(url).includes('/users/')) return jsonResponse({ message: 'Not Found' });
+    return jsonResponse([
+      { name: '7347157+joylvliang@user.noreply.gitee.com', email: 'x@y' },
+      { name: '12345+octocat@users.noreply.github.com', email: 'x@y' },
+      { name: 'chenfei', email: 'x@y' },
+    ]);
+  });
+
+  const r = await contributors('gitee', { owner: 'a', repo: 'b' }, { maxPeople: 5 });
+  assert.deepEqual(r.people.map((p) => p.login), ['joylvliang', 'octocat', 'chenfei']);
+  // 改写后不得残留 @
+  for (const p of r.people) assert.ok(!String(p.login).includes('@'));
+});
+
+test('mapLimited keeps results in input order despite concurrency', async (t) => {
+  // 并发写回按索引，所以顺序必须与接口给的顺序一致（按贡献排序）。
+  // 故意让靠前的请求更慢：若按完成顺序 push，顺序就会乱。
+  const names = ['slow', 'fast', 'mid', 'last'];
+  const delays = [30, 1, 10, 1];
+  stubFetch(t, async (url) => {
+    const s = String(url);
+    const idx = names.findIndex((n) => s.includes(`/${n}`));
+    await new Promise((res) => setTimeout(res, delays[idx] ?? 0));
+    if (s.includes('/users/')) return jsonResponse({ message: 'Not Found' });
+    return jsonResponse(names.map((name) => ({ name, email: 'x@y' })));
+  });
+
+  const r = await contributors('gitee', { owner: 'a', repo: 'b' }, { maxPeople: 10 });
+  assert.deepEqual(r.people.map((p) => p.login), names);
+});
+
+test('gitlab stops looking people up once the quota is exhausted', async (t) => {
+  // 限流是全局状态：第一个人撞 429 时，后面 99 个人必然也撞。
+  // 继续跑完只是白耗时间（实测该步曾占 CI 396 秒）。
+  const names = Array.from({ length: 40 }, (_, i) => `u${i}`);
+  let userLookups = 0;
+  let limited = false;
+
+  stubFetch(t, async (url) => {
+    const s = String(url);
+    if (s.includes('/contributors')) {
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: (k) => (k === 'content-type' ? 'application/json' : null) },
+        json: async () => names.map((n) => ({ name: n, email: `${n}@x` })),
+      };
+    }
+    userLookups += 1;
+    limited = true;
+    return rateLimited(3006);
+  });
+
+  const r = await contributors('gitlab', { owner: 'a', repo: 'b' }, { maxPeople: 40 });
+
+  // 并发 5 个，所以会有几个在途请求；关键是远少于 40。
+  assert.ok(userLookups < 20, `撞限流后应停止查询，实际查了 ${userLookups} 次`);
+  assert.ok(limited);
+  assert.equal(r.people.length, 40, '人名照常保留，只是没有头像');
+  assert.ok(r.people.some((p) => p.avatar === null));
+});
+
 /** 一个 429 响应，带指定的 retry-after。 */
 function rateLimited(retryAfter) {
   return {
