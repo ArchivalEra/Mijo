@@ -6,8 +6,14 @@ on:
   push:
     branches: [main]
     paths:
+      # 整个派生链路：任何一个改了，产出都可能变，必须重新派生。
+      # 只列 generate-catalogue.mjs 曾经漏掉 contributors.mjs 的改动——
+      # 改了取数逻辑却不重新派生，线上会一直停在旧数据上。
       - 'material/urls.txt'
       - 'scripts/generate-catalogue.mjs'
+      - 'scripts/contributors.mjs'
+      - 'scripts/enrich.mjs'
+      - 'scripts/completeness.mjs'
       - '.github/workflows/catalogue.yml'
   workflow_dispatch:
   schedule:
