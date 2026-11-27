@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-27T14:55:37.099Z",
+ "generatedAt": "2026-11-27T15:09:26.558Z",
  "entries": [
   {
    "name": "mindspore",
@@ -1724,18 +1724,18 @@
     },
     {
      "login": "Margaret_wangrui",
-     "avatar": "https://foruda.gitee.com/avatar/1677074276658271905/7379189_margaret_wangrui_1588991307.png",
-     "url": "https://gitee.com/Margaret_wangrui"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "ZPaC",
-     "avatar": "https://foruda.gitee.com/avatar/1676934766732241498/901397_zpac_1586786423.png",
-     "url": "https://gitee.com/zpac"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "yanghaoran",
-     "avatar": "https://gitee.com/assets/no_portrait.png",
-     "url": "https://gitee.com/YangHaoRan"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "gaoyong10",
