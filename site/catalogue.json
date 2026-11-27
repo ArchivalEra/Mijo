@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generatedAt": "2026-11-27T07:08:19.426Z",
+ "generatedAt": "2026-11-27T09:43:48.006Z",
  "entries": [
   {
    "name": "mindspore",
@@ -519,7 +519,7 @@
   {
    "name": "node",
    "maintainer": "nodejs",
-   "lastCommit": "2026-11-27T06:22:21Z",
+   "lastCommit": "2026-11-27T09:19:44Z",
    "license": "MIT",
    "description": "Node.js JavaScript runtime ✨🐢🚀✨",
    "avatar": "https://avatars.githubusercontent.com/u/9950313?v=4",
@@ -1023,7 +1023,7 @@
   {
    "name": "gitlab-runner",
    "maintainer": "GitLab.org",
-   "lastCommit": "2026-11-27T16:07:05.000+11:00",
+   "lastCommit": "2026-11-27T13:53:25.000+05:30",
    "license": "MIT",
    "description": "GitLab Runner is the open source project that is used to run your CI/CD jobs and send the results back to GitLab",
    "avatar": "https://gitlab.com/uploads/-/system/group/avatar/9970/project_avatar.png?v=1750616408",
@@ -1032,7 +1032,7 @@
    "contributors": [
     {
      "login": "GitLab Renovate Bot",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1795762048",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/1786152/avatar.png?v=1795769249",
      "url": "https://gitlab.com/gitlab-bot"
     },
     {
@@ -1082,7 +1082,7 @@
     },
     {
      "login": "Roshni Sarangadharan",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/21979359/avatar.png?v=1795739604",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/21979359/avatar.png?v=1795767745",
      "url": "https://gitlab.com/rsarangadharan"
     },
     {
@@ -1122,7 +1122,7 @@
     },
     {
      "login": "Evan Read",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/2683848/avatar.png?v=1795758881",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/2683848/avatar.png?v=1795767852",
      "url": "https://gitlab.com/eread"
     },
     {
@@ -1222,7 +1222,7 @@
     },
     {
      "login": "Kam Kyrala",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19859972/avatar.png?v=1795738085",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/19859972/avatar.png?v=1795770473",
      "url": "https://gitlab.com/kkyrala"
     },
     {
@@ -1252,7 +1252,7 @@
     },
     {
      "login": "Jeston Singh",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/42048126/avatar.png?v=1795755318",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/42048126/avatar.png?v=1795766571",
      "url": "https://gitlab.com/sjestonsingh"
     },
     {
@@ -1281,9 +1281,9 @@
      "url": null
     },
     {
-     "login": "Sigurd Spieckermann",
-     "avatar": null,
-     "url": null
+     "login": "Justin Farmiloe",
+     "avatar": "https://secure.gravatar.com/avatar/d29d57cdd442edcb499324d7e1851b377a537102ec12f933f1d6f83efe6d46c5?s=80&d=identicon",
+     "url": "https://gitlab.com/jfarmiloe"
     },
     {
      "login": "Stéphane Talbot",
@@ -1317,8 +1317,13 @@
     },
     {
      "login": "Toon Claes",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/660180/avatar.png?v=1795762214",
+     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/660180/avatar.png?v=1795770948",
      "url": "https://gitlab.com/toon"
+    },
+    {
+     "login": "Sigurd Spieckermann",
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Manish Kumar",
@@ -1327,8 +1332,8 @@
     },
     {
      "login": "Maria Jose Salmeron Ibáñez",
-     "avatar": "https://gitlab.com/uploads/-/system/user/avatar/20946219/avatar.png?v=1795760017",
-     "url": "https://gitlab.com/mjsibanez"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "Sepehr Heydari",
@@ -1342,11 +1347,6 @@
     },
     {
      "login": "Rafael Fonseca",
-     "avatar": null,
-     "url": null
-    },
-    {
-     "login": "Justin Farmiloe",
      "avatar": null,
      "url": null
     },
@@ -1894,8 +1894,8 @@
     },
     {
      "login": "sunsuodong",
-     "avatar": "https://gitee.com/assets/no_portrait.png",
-     "url": "https://gitee.com/sunsuodong"
+     "avatar": null,
+     "url": null
     },
     {
      "login": "shenwei41",
