@@ -218,6 +218,20 @@ function lastPage(headers) {
  *
  * @param {{owner:string,repo:string}} ref @param {number} maxPeople @param {string} [token]
  */
+/**
+ * GitLab：contributors 端点只给 name + email，**没有 username**。
+ *
+ * 实测该端点返回的 email 是真实邮箱（`rsarangadharan@gitlab.com`），
+ * commits 端点也只给 author_name/author_email —— 整条链路都没有 username。
+ * 所以从 email 的本地部分猜 username 是不可靠的：`twatson` 未必是账号名，
+ * 100 个贡献者实测 0 命中，而每次尝试都发一个注定失败的请求。
+ *
+ * 更不该做的是拿真实邮箱的本地部分去展示或查询：那是隐私边界内的东西。
+ * 这里只保留 name（真人名）与总数，头像/主页留空由页面退化成首字母 ——
+ * 这是 GitLab 的平台事实，不是抓取失败，所以标 ownerAvatarAbsent 那类降级。
+ *
+ * @param {{owner:string,repo:string}} ref @param {number} maxPeople @param {string} [token]
+ */
 async function gitlab(ref, maxPeople, token) {
   const pid = encodeURIComponent(`${ref.owner}/${ref.repo}`);
   const base = `https://gitlab.com/api/v4/projects/${pid}/repository/contributors`;
@@ -227,43 +241,18 @@ async function gitlab(ref, maxPeople, token) {
   const r = await j(list, auth);
   if (!r.ok || !Array.isArray(r.data)) return null;
 
-  // 全员查头像（不按位次跳过 —— 跳过的位在页面上会静默变成首字母）。
-  // 逐人一次请求，并发 5 个：串行跑 100 个往返是 CI 慢的主因。
-  // 一旦撞上 429 就停掉剩余查询：限流是全局状态，后面的人必然也撞。
-  let limited = false;
+  // 只取 name。不查 /users：没有可靠的 username 可查，查了也是 100 次空转。
   /** @type {{login:string|null,avatar:string|null,url:string|null}[]} */
-  const people = await mapLimited(r.data.slice(0, maxPeople), async (c) => {
-    const base = { login: displayName(c.name) };
-    if (limited) return { ...base, avatar: null, url: null };
-    return { ...base, ...(await gitlabUser(c.email, auth, () => { limited = true; })) };
-  });
+  const people = r.data.slice(0, maxPeople).map((c) => ({
+    login: c.name || null,
+    avatar: null,
+    url: null,
+  }));
 
   // 总数：x-total 头（实测 gitlab-runner 247，与逐页数一致）
   const probe = await j(`${base}?order_by=commits&sort=desc&per_page=1`, auth);
   const totalRaw = probe.headers?.get?.('x-total');
   return { total: totalRaw ? Number(totalRaw) : null, people };
-}
-
-/**
- * 用 email 的本地部分猜 username，查公开账号拿头像与主页。
- * email 只在这里读一次，绝不写进返回值或 catalogue。
- *
- * onLimited：撞到 429 时回调一次。调用方据此停掉**剩余**查询 ——
- * 限流是按 IP/配额算的全局状态，第一个人撞墙时后面的人必然也撞，
- * 继续跑 99 次只会白白耗时间（实测 CI 里这一步曾让本步耗时到 396 秒）。
- *
- * @param {string} [email] @param {Record<string,string>} [auth]
- * @param {() => void} [onLimited]
- * @returns {Promise<{avatar:string|null, url:string|null}>}
- */
-async function gitlabUser(email, auth = {}, onLimited) {
-  const local = String(email || '').split('@')[0];
-  if (!local) return { avatar: null, url: null };
-  const u = await j(`https://gitlab.com/api/v4/users?username=${encodeURIComponent(local)}`, auth);
-  if (u.status === 429) onLimited?.();
-  const hit = Array.isArray(u.data) ? u.data[0] : null;
-  if (!hit) return { avatar: null, url: null };
-  return { avatar: hit.avatar_url || null, url: hit.web_url || null };
 }
 
 /**

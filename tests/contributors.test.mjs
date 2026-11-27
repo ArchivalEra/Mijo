@@ -142,35 +142,34 @@ test('mapLimited keeps results in input order despite concurrency', async (t) =>
   assert.deepEqual(r.people.map((p) => p.login), names);
 });
 
-test('gitlab stops looking people up once the quota is exhausted', async (t) => {
-  // 限流是全局状态：第一个人撞 429 时，后面 99 个人必然也撞。
-  // 继续跑完只是白耗时间（实测该步曾占 CI 396 秒）。
-  const names = Array.from({ length: 40 }, (_, i) => `u${i}`);
+test('gitlab keeps names but does not guess usernames from real emails', async (t) => {
+  // GitLab 的 contributors 端点只给 name + email，没有任何 username；
+  // 实测 email 是真实邮箱，本地部分（twatson / rsarangadharan）不是账号名，
+  // 拿它去 /users?username= 查，100 个贡献者 0 命中 —— 全是空转请求。
+  // 所以适配器不该发那些请求，也别把邮箱本地部分当成账号名展示。
   let userLookups = 0;
-  let limited = false;
-
   stubFetch(t, async (url) => {
     const s = String(url);
-    if (s.includes('/contributors')) {
-      return {
-        ok: true,
-        status: 200,
-        headers: { get: (k) => (k === 'content-type' ? 'application/json' : null) },
-        json: async () => names.map((n) => ({ name: n, email: `${n}@x` })),
-      };
-    }
-    userLookups += 1;
-    limited = true;
-    return rateLimited(3006);
+    if (s.includes('/users')) { userLookups += 1; return jsonResponse([]); }
+    return {
+      ok: true,
+      status: 200,
+      headers: { get: (k) => (k === 'content-type' ? 'application/json' : null) },
+      json: async () => [
+        { name: 'Tiger Watson', email: 'twatson@gitlab.com' },
+        { name: 'Aftab Shaik', email: 'aftabshaik07@aol.com' },
+      ],
+    };
   });
 
-  const r = await contributors('gitlab', { owner: 'a', repo: 'b' }, { maxPeople: 40 });
+  const r = await contributors('gitlab', { owner: 'a', repo: 'b' }, { maxPeople: 10, token: 'glpat-x' });
 
-  // 并发 5 个，所以会有几个在途请求；关键是远少于 40。
-  assert.ok(userLookups < 20, `撞限流后应停止查询，实际查了 ${userLookups} 次`);
-  assert.ok(limited);
-  assert.equal(r.people.length, 40, '人名照常保留，只是没有头像');
-  assert.ok(r.people.some((p) => p.avatar === null));
+  assert.equal(userLookups, 0, '没有可靠的 username 可查，就不该发这些请求');
+  assert.deepEqual(r.people.map((p) => p.login), ['Tiger Watson', 'Aftab Shaik']);
+  assert.ok(r.people.every((p) => p.avatar === null), '头像是平台事实的缺失，不是抓取失败');
+  // 真实邮箱的本地部分不得出现在输出里
+  assert.ok(!JSON.stringify(r).includes('twatson'));
+  assert.ok(!JSON.stringify(r).includes('aftabshaik07'));
 });
 
 /** 一个 429 响应，带指定的 retry-after。 */
@@ -230,9 +229,9 @@ test('a 429 with no retry-after does not spin', async (t) => {
   assert.equal(calls, 1, '缺 retry-after 时应立即放弃，不重试');
 });
 
-test('gitlab sends its token, since anonymous quota cannot survive 100 lookups', async (t) => {
-  // 每人一次账号查询，100 人就是 100+ 请求；匿名配额 500/分钟按 IP 算，
-  // 实测耗尽后要等 50 分钟。CI 注入了 MJ_GITLAB_TOKEN，必须真的用上。
+test('gitlab sends its token when one is configured', async (t) => {
+  // 即使现在不再逐人查账号，contributors 与 total 两个请求仍应带 token：
+  // 匿名配额按 IP 算且很小，这个仓一次派生要发多次。
   /** @type {Record<string,string>[]} */
   const seenHeaders = [];
   stubFetch(t, async (url, init) => {
